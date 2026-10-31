@@ -28,6 +28,9 @@ _AGE_INFO = "AGE动漫"
 # maccms 资源站多为影视综合站: 只保留分类名属于动漫的条目 (首页/搜索/分类共用)
 _ANIME_KEYS = ("动漫", "動漫", "番剧", "番劇", "动画", "動畫",
                "国漫", "日漫", "新番", "剧场版", "OVA", "泡面番")
+# 只要日漫: 分类/地区命中这些标记即剔除 (国产/欧美/韩台等)
+_NON_JP_KEYS = ("国产", "国漫", "大陆", "欧美", "美国", "韩国", "韩漫",
+                "港台", "香港", "台湾", "海外", "泰国")
 
 
 def _is_anime_name(name):
@@ -35,21 +38,40 @@ def _is_anime_name(name):
     return any(k.lower() in n.lower() for k in _ANIME_KEYS)
 
 
+def _is_jp_name(name):
+    """分类名是否指向日本动漫"""
+    n = str(name or "")
+    if not n or any(k in n for k in _NON_JP_KEYS):
+        return False
+    return "日" in n
+
+
 def _anime_tids(apis):
-    """渠道中属于动漫的分类 id 集合"""
-    return {tid for tid, name in _classes(apis) if _is_anime_name(name)}
+    """渠道中属于日漫的分类 id 集合"""
+    return {tid for tid, name in _classes(apis)
+            if _is_anime_name(name) and _is_jp_name(name)}
 
 
 def _keep_anime(it, tids):
-    """过滤非动漫条目; 类型信息缺失时保留 (避免误杀)"""
+    """只保留日本动漫: 分类须为动漫, 地区明确为非日本则剔除"""
     tn = _clean(it.get("type_name") or "")
+    area = _clean(it.get("vod_area") or "")
+    if tn and not _is_anime_name(tn):
+        return False
+    jp_cat = _is_jp_name(tn)
+    if area:
+        if "日本" in area or "日韩" in area:
+            return True
+        if any(k in area for k in _NON_JP_KEYS):
+            return False
+        return jp_cat
     if tn:
-        return _is_anime_name(tn)
+        return jp_cat
     try:
         tid = int(it.get("type_id"))
     except Exception:
-        return True
-    return (not tids) or tid in tids
+        return False
+    return tid in tids
 
 
 
