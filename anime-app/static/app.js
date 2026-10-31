@@ -2072,7 +2072,8 @@ function pageMine() {
         </div>
         <div class="about-tip">应用内不提供下载, 只检查是否有新版本。</div>
         <div class="about-tip" style="margin-top:10px;color:#c0392b;text-align:left">
-          <b>请认准官方下载渠道</b>: <a href="${OFFICIAL_URL}" target="_blank" rel="noopener">GitHub 发布页</a><br>
+          <b>唯一公开地址</b>（本版只此一个公开仓库, 其余仓库均已设为私人）:<br>
+          <a href="${OFFICIAL_URL}" target="_blank" rel="noopener">github.com/drlinesu/chaoyue-ji-xian-waiyuan</a><br>
           请勿从他人分享的链接、网盘或第三方站点下载, 谨防下载到被篡改的安装包。
         </div>
       </div>
@@ -2585,7 +2586,8 @@ function dmBoot(title, ep, key) {
 
 /* ---------- 版本检查 (只提示, 不提供下载; 唯一官方渠道 = GitHub 发布页) ---------- */
 let APP_VERSION = "2.5.1";
-const OFFICIAL_URL = "https://github.com/drlinesu/--1/releases";
+/* 唯一公开仓库: 其余仓库均已设为私人 */
+const OFFICIAL_URL = "https://github.com/drlinesu/chaoyue-ji-xian-waiyuan";
 /* 版本检查结果渲染: 有新版本时给出官方下载入口 (应用内不做下载/安装) */
 function _updRender(d) {
   const info = document.getElementById("updInfo");

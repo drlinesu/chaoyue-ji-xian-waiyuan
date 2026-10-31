@@ -29,15 +29,17 @@ from .sources.meta import metadata_info, reco_yearly, _anilist_tag_set
 # 版本检查 (更新源固定为官方 GitHub 发布页, 不可配置)
 # ----------------------------------------------------------------------------
 APP_VERSION = "2.5.1"
-GITHUB_REPO = "drlinesu/--1"
+# 唯一公开仓库: 其余仓库均已设为私人, 更新检查只认这个地址
+GITHUB_REPO = "drlinesu/chaoyue-ji-xian-waiyuan"
 GITHUB_BASE = "https://github.com/%s/releases/latest/download" % GITHUB_REPO
 # 唯一官方下载渠道: 应用内只提示新版本, 不提供下载/安装, 统一引导到 GitHub 发布页
-OFFICIAL_URL = "https://github.com/%s/releases" % GITHUB_REPO
+OFFICIAL_URL = "https://github.com/%s" % GITHUB_REPO
 # 源顺序: 国内镜像优先 (GitHub 直连在国内大多超时, 放最后避免每次白等 12s)
 DEFAULT_UPDATE_SOURCES = [
     "https://ghproxy.net/" + GITHUB_BASE,
     "https://ghfast.top/" + GITHUB_BASE,
-    "https://cdn.jsdelivr.net/gh/%s@main/release" % GITHUB_REPO,
+    # 仓库无 Release 时回退读仓库里的 VERSION (jsdelivr 走 GitHub 公共 CDN, 国内可直连)
+    "https://cdn.jsdelivr.net/gh/%s@main/anime-app" % GITHUB_REPO,
     GITHUB_BASE,
 ]
 DEFAULT_UPDATE_SOURCE = GITHUB_BASE
@@ -46,7 +48,8 @@ _UPD_PROG = {"phase": "idle", "pct": 0, "msg": ""}   # 在线更新进度 (前�
 
 def _read_version(root=ROOT):
     try:
-        return (root / "VERSION").read_text(encoding="utf-8").strip() or APP_VERSION
+        v = (root / "VERSION").read_text(encoding="utf-8").strip()
+        return v.lstrip("\ufeff").strip() or APP_VERSION   # 兼容带 BOM 的 VERSION
     except Exception:
         return APP_VERSION
 
