@@ -1,0 +1,1708 @@
+/* ============ 超越次元 · 日漫黑白风格 ============ */
+:root {
+  --bg: #f4f2ee;
+  --bg2: #e8e5df;
+  --card: #ffffff;
+  --card-hover: #f8f6f2;
+  --text: #1a1a1a;
+  --text2: #555;
+  --line: #1a1a1a;
+  --accent: #1a1a1a;
+  --accent-bg: #f4f2ee;
+  --border: #1a1a1a;
+  --jp-red: #e60012;   /* 日漫经典红 (JUMP) */
+  --radius: 3px;
+  --spring: cubic-bezier(.34, 1.56, .64, 1);   /* 灵动弹性曲线: 终点前轻微过冲再回弹 */
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  background-image: radial-gradient(circle, #00000012 1px, transparent 1px);
+  background-size: 5px 5px;
+  color: var(--text);
+  font-family: "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+a { color: inherit; text-decoration: none; }
+img { display: block; }
+
+/* ---------- 漫画速度线 (替代樱花) ---------- */
+.sakura-layer { position: fixed; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; }
+.sakura-layer i {
+  position: absolute; top: -40px; display: block;
+  width: 2px; height: 40px;
+  background: linear-gradient(to bottom, transparent, rgba(0,0,0,.22));
+  animation: speed-line linear infinite;
+}
+@keyframes speed-line { to { transform: translateY(110vh); opacity: 0; } }
+
+/* ---------- 顶栏 ---------- */
+.topbar {
+  position: sticky; top: 0; z-index: 100;
+  background: #fff;
+  border-bottom: 2px solid #1a1a1a;
+  margin-left: -78px; padding-left: 78px;   /* 顶栏贯通全宽, 与左导航栏无缝衔接 */
+}
+body.immersive .topbar { margin-left: 0; padding-left: 0; }
+.topbar-inner {
+  max-width: 1280px; margin: 0 auto; padding: 0 20px;
+  height: 62px; display: flex; align-items: center; gap: 30px;
+}
+.logo { display: flex; align-items: center; gap: 9px; font-size: 21px; font-weight: 800; letter-spacing: .5px; }
+.logo-icon { font-size: 24px; display: inline-block; }
+/* ---------- 初音未来吉祥物 (logo 图标位): 坐姿 + 双马尾/耳机, Live2D 式鼠标互动 ---------- */
+.alona {
+  position: relative; display: inline-block; flex-shrink: 0;
+  width: 42px; height: 58px;
+  align-self: flex-end; margin-bottom: -5px;   /* 坐在顶栏底边上 */
+  cursor: pointer; user-select: none;
+}
+.alona-svg { width: 100%; height: 100%; display: block; overflow: visible; animation: alona-idle 3.6s ease-in-out infinite; }
+@keyframes alona-idle { 0%, 100% { transform: translateY(0) scaleY(1); } 50% { transform: translateY(-1.4px) scaleY(1.016); } }
+#alonaHaloWrap { animation: alona-halo 3.6s ease-in-out infinite; }
+@keyframes alona-halo { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-2.2px); } }
+#alonaHaloWrap.hop { animation: alona-hop .55s var(--spring); }
+@keyframes alona-hop { 0% { transform: translateY(0); } 40% { transform: translateY(-7px); } 75% { transform: translateY(1.5px); } 100% { transform: translateY(0); } }
+#alonaShadow { transform-box: fill-box; transform-origin: center; animation: alona-shadow 3.6s ease-in-out infinite; }
+@keyframes alona-shadow { 0%, 100% { opacity: .12; transform: scaleX(1); } 50% { opacity: .08; transform: scaleX(.92); } }
+.alona .alona-eye { transform-box: fill-box; transform-origin: center; transition: transform .09s ease; }
+.alona .alona-happy { display: none; }
+.alona:hover .alona-eye { display: none; }
+.alona:hover .alona-happy { display: block; }
+.alona:hover { animation: alona-bounce .5s var(--spring); }
+@keyframes alona-bounce { 0% { transform: translateY(0); } 35% { transform: translateY(-5px); } 72% { transform: translateY(1px); } 100% { transform: translateY(0); } }
+/* 吉祥物说话气泡 (点击触发) */
+.alona-bubble {
+  position: absolute; left: 50%; bottom: calc(100% + 9px);
+  transform: translateX(-50%) translateY(4px) scale(.9);
+  background: #fff; border: 2px solid #1a1a1a; box-shadow: 3px 3px 0 #1a1a1a;
+  padding: 6px 11px; font-size: 12px; font-weight: 700; white-space: nowrap;
+  color: #1a1a1a; opacity: 0; pointer-events: none; z-index: 101;
+  transition: opacity .18s ease, transform .2s var(--spring);
+}
+.alona-bubble.show { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+.alona-bubble::after {
+  content: ""; position: absolute; left: 50%; top: 100%; margin-left: -5px;
+  border: 5px solid transparent; border-top-color: #1a1a1a;
+}
+@media (prefers-reduced-motion: reduce) {
+  .alona-svg, #alonaHaloWrap, #alonaShadow { animation: none; }
+  .alona:hover { animation: none; }
+}
+.logo-text em { font-style: normal; color: var(--jp-red); border-bottom: 3px solid var(--jp-red); }
+/* ---------- Kazumi 式左侧纵向导航栏 (漫画风): 图标+文字, 红色圆角块弹性选中 ---------- */
+.siderail {
+  position: fixed; left: 0; top: 62px; bottom: 0; width: 78px; z-index: 150;
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  padding: 20px 0;
+  background: #fff;
+  border-right: 2px solid #1a1a1a;
+}
+body.app-mode .siderail { top: 94px; }   /* App 窗口模式顶栏下移 32px */
+.siderail a {
+  position: relative;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  width: 62px; padding: 9px 0 7px;
+  font-size: 11px; font-weight: 600; color: #555;
+  transition: color .15s;
+}
+.siderail a svg { width: 22px; height: 22px; position: relative; z-index: 1; }
+.siderail a span { position: relative; z-index: 1; }
+.siderail a:hover { color: #1a1a1a; }
+/* 未选中 hover: 浅底圆角 */
+.siderail a:hover::before {
+  content: ""; position: absolute; inset: 0; z-index: 0;
+  background: #f4f2ee; border-radius: 12px;
+}
+/* 选中项: JUMP 红圆角色块 + 硬阴影, 弹性 pop-in (Kazumi 丝滑选中感) */
+.siderail a.active { color: #fff; }
+.siderail a.active::before {
+  content: ""; position: absolute; inset: 0; z-index: 0;
+  background: var(--jp-red); border: 2px solid var(--jp-red); border-radius: 12px;
+  box-shadow: 3px 3px 0 #1a1a1a;
+  animation: tab-pop .32s var(--spring);
+  transform-origin: center;
+}
+@keyframes tab-pop {
+  0% { transform: scale(.55); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+/* 主体整体右移, 给左栏让位 */
+body { padding-left: 78px; }
+/* 详情/播放页沉浸模式: 隐藏左栏, 内容回中 */
+body.immersive { padding-left: 0; }
+body.immersive .siderail { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  .siderail a.active::before, .siderail a:hover::before { animation: none; }
+}
+.searchbox { margin-left: auto; display: flex; align-items: center; }
+.searchbox input {
+  width: 220px; height: 37px; padding: 0 16px;
+  background: #fff; border: 2px solid #1a1a1a;
+  border-radius: 0; color: #1a1a1a; font-size: 14px; outline: none;
+  border-right: none;
+}
+.searchbox input:focus { background: #f4f2ee; }
+.searchbox button {
+  height: 37px; padding: 0 15px; border: 2px solid #1a1a1a; cursor: pointer;
+  background: #1a1a1a; color: #fff; border-radius: 0; font-size: 14px;
+  border-left: none;
+}
+
+/* ---------- 主体 ---------- */
+#app { max-width: 1280px; margin: 0 auto; padding: 22px 20px 60px; min-height: 70vh; position: relative; z-index: 2; }
+.section { margin-bottom: 36px; }
+.section-head { display: flex; align-items: baseline; margin-bottom: 16px; gap: 12px; }
+.section-head h2 { font-size: 20px; font-weight: 800; position: relative; padding-left: 13px; letter-spacing: .5px; }
+.section-head h2::before {
+  content: ""; position: absolute; left: 0; top: 4px; bottom: 4px;
+  width: 4px; background: var(--jp-red);
+}
+.section-head .more { margin-left: auto; font-size: 13px; color: #555; transition: color .12s; }
+.section-head .more:hover { color: var(--jp-red); font-weight: 700; }
+
+/* ---------- 首页轮播 Banner ---------- */
+.carousel {
+  position: relative; overflow: hidden;
+  border-radius: 12px; margin-bottom: 30px;
+  border: 2px solid #1a1a1a;
+  box-shadow: 4px 4px 0 #1a1a1a;
+  background: #fff;
+}
+.carousel-track {
+  display: flex; transition: transform .6s cubic-bezier(.4, 0, .2, 1);
+}
+.carousel-slide {
+  position: relative; min-width: 100%; height: 320px; cursor: pointer;
+  overflow: hidden;
+}
+.carousel-bg { position: absolute; inset: 0; }
+.carousel-bg img {
+  width: 100%; height: 100%; object-fit: cover;
+  filter: grayscale(.15) brightness(.85);
+  transform: scale(1.05); transition: transform 8s ease-out;
+}
+.carousel-slide.active .carousel-bg img { transform: scale(1.15); }
+.carousel-slide::after {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(90deg, rgba(255,255,255,.92) 0%, rgba(255,255,255,.55) 45%, transparent 80%);
+}
+.carousel-info {
+  position: absolute; left: 40px; bottom: 40px; z-index: 2;
+  max-width: 60%; color: #1a1a1a;
+}
+.carousel-badge {
+  display: inline-block; padding: 3px 12px;
+  background: var(--jp-red); border: 2px solid var(--jp-red);
+  font-size: 12px; color: #fff; margin-bottom: 10px; font-weight: 600;
+}
+.carousel-info h2 {
+  font-size: 26px; font-weight: 800; letter-spacing: 1px;
+  margin-bottom: 6px;
+  display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden;
+}
+.carousel-info p {
+  font-size: 13px; color: #333; line-height: 1.6;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.carousel-btn {
+  display: inline-block; margin-top: 12px; padding: 8px 22px;
+  background: var(--jp-red); color: #fff; border: 2px solid var(--jp-red);
+  font-size: 13px; font-weight: 600;
+}
+.carousel-arrow {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  z-index: 3; width: 40px; height: 40px;
+  border: 2px solid #1a1a1a; cursor: pointer; font-size: 22px; color: #1a1a1a;
+  background: #fff;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .15s; opacity: 0;
+}
+.carousel:hover .carousel-arrow { opacity: 1; }
+.carousel-arrow:hover { background: #1a1a1a; color: #fff; }
+.carousel-arrow.prev { left: 12px; }
+.carousel-arrow.next { right: 12px; }
+.carousel-dots {
+  position: absolute; bottom: 14px; right: 20px; z-index: 3;
+  display: flex; gap: 7px;
+}
+.carousel-dot {
+  width: 8px; height: 8px; cursor: pointer;
+  background: #ccc; transition: all .2s var(--spring);
+}
+.carousel-dot.active { background: var(--jp-red); width: 22px; }
+
+/* ---------- 轮播换图进度条: 3px 细线贴底, 线性充满提示换图时机, 不遮挡画面 ---------- */
+.carousel-progress {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 3px; z-index: 4;
+  background: rgba(0, 0, 0, .16);
+  pointer-events: none;
+}
+.carousel-progress i {
+  display: block; width: 0; height: 100%;
+  background: linear-gradient(90deg, var(--jp-red), #ff5a7a);
+}
+.carousel-progress i.run { animation: carousel-fill 5s linear both; }
+@keyframes carousel-fill { from { width: 0; } to { width: 100%; } }
+@media (prefers-reduced-motion: reduce) {
+  .carousel-progress { display: none; }
+}
+
+/* ---------- 顶部随机插图横幅 (搜索栏上方): 缩为定高横幅 + 换图进度条贴底不遮挡画面 ---------- */
+.bg-illus {
+  position: relative; width: 100%; height: 150px; overflow: hidden;
+  background: #fff;
+  border-bottom: 2px solid #1a1a1a;
+}
+.bg-illus img {
+  display: block; width: 100%; height: 100%;
+  object-fit: cover; object-position: center 30%;
+  transition: opacity .5s ease;
+}
+.bg-illus-progress {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 3px; z-index: 2;
+  background: rgba(0, 0, 0, .16);
+  pointer-events: none;
+}
+.bg-illus-progress i {
+  display: block; width: 0; height: 100%;
+  background: linear-gradient(90deg, var(--jp-red), #ff5a7a);
+}
+.bg-illus-progress i.run { animation: bgillus-fill 90s linear both; }
+@keyframes bgillus-fill { from { width: 0; } to { width: 100%; } }
+/* 用户自设背景优先, 隐藏随机横幅避免双重背景 */
+.has-bg .bg-illus { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  .bg-illus-progress { display: none; }
+}
+
+/* ---------- 横滑卡片 ---------- */
+.h-scroll {
+  display: flex; gap: 14px; overflow-x: auto; padding-bottom: 10px;
+  scroll-behavior: smooth;
+}
+.h-scroll::-webkit-scrollbar { height: 6px; }
+.h-scroll::-webkit-scrollbar-thumb { background: #1a1a1a; }
+.h-card {
+  flex-shrink: 0; width: 152px; cursor: pointer;
+  transition: transform .2s var(--spring);
+}
+.h-card:hover { transform: translateY(-3px); }
+.h-cover {
+  position: relative; width: 152px; aspect-ratio: 3/4;
+  overflow: hidden; background: #fff;
+  border: 2px solid #1a1a1a; border-radius: 10px;
+  transition: box-shadow .18s ease;
+}
+.h-card:hover .h-cover { box-shadow: 4px 4px 0 #1a1a1a; }
+.h-cover img { width: 100%; height: 100%; object-fit: cover; }
+.h-mask {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  background: rgba(255,255,255,.5);
+  opacity: 0; transition: opacity .15s;
+}
+.h-card:hover .h-mask { opacity: 1; }
+.h-cover .play-ico {
+  width: 46px; height: 46px;
+  background: #1a1a1a; color: #fff; font-size: 18px;
+  display: flex; align-items: center; justify-content: center;
+  transform: scale(.6); transition: transform .18s var(--spring);
+}
+.h-card:hover .play-ico { transform: scale(1); }
+.h-ep {
+  position: absolute; left: 7px; bottom: 7px; padding: 2px 8px;
+  background: #1a1a1a; font-size: 11px; color: #fff;
+}
+.h-title {
+  margin-top: 8px; font-size: 13px; font-weight: 600; line-height: 1.4; padding: 0 2px;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  transition: color .15s;
+}
+.h-card:hover .h-title { color: #1a1a1a; }
+.h-info { font-size: 11px; color: #555; margin-top: 2px; padding: 0 2px;
+  display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* ---------- 快捷分类条 ---------- */
+.quick-genres {
+  display: flex; gap: 9px; overflow-x: auto; padding-bottom: 8px;
+  scroll-behavior: smooth;
+}
+.quick-genres::-webkit-scrollbar { height: 4px; }
+.quick-genres::-webkit-scrollbar-thumb { background: #1a1a1a; }
+.qg-chip {
+  flex-shrink: 0; padding: 8px 16px;
+  background: #fff; border: 2px solid #1a1a1a;
+  color: #1a1a1a; font-size: 13px; cursor: pointer; transition: all .12s;
+  white-space: nowrap;
+}
+.qg-chip:hover { background: #1a1a1a; color: #fff; }
+.qg-chip.all { background: var(--jp-red); color: #fff; border-color: var(--jp-red); }
+
+/* ---------- 周几 Tabs ---------- */
+.weekday-tabs {
+  display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap;
+}
+.weekday-tab {
+  display: flex; align-items: center; gap: 5px;
+  padding: 8px 18px;
+  border: 2px solid #1a1a1a; background: #fff;
+  color: #555; font-size: 14px; font-weight: 500; cursor: pointer;
+  transition: all .12s;
+}
+.weekday-tab:hover { color: #1a1a1a; }
+.weekday-tab.active { background: var(--jp-red); color: #fff; border-color: var(--jp-red); }
+.weekday-count {
+  padding: 1px 7px; font-size: 11px;
+  background: #fff; color: #1a1a1a; border: 1px solid #1a1a1a;
+}
+.weekday-tab.active .weekday-count { background: #1a1a1a; color: #fff; border-color: #fff; }
+
+/* ---------- 分类导航 ---------- */
+.cat-nav { display: flex; flex-direction: column; gap: 20px; }
+.cat-nav-group { margin-bottom: 4px; }
+.cat-nav-label {
+  font-size: 15px; font-weight: 700; color: #1a1a1a;
+  margin-bottom: 12px; padding-left: 13px; position: relative;
+}
+.cat-nav-label::before {
+  content: ""; position: absolute; left: 0; top: 4px; bottom: 4px;
+  width: 4px; background: #1a1a1a;
+}
+.cat-nav-chips {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 12px;
+}
+.cat-nav-chips .genre-item { padding: 12px 6px; }
+.cat-nav-chips .genre-emoji { font-size: 22px; }
+.cat-nav-chips .genre-name { font-size: 12px; }
+
+/* ---------- 分类入口 ---------- */
+.genre-wrap { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 12px; }
+.genre-item {
+  padding: 16px 8px; border: 2px solid #1a1a1a;
+  background: #fff; cursor: pointer; text-align: center; transition: all .12s;
+  display: flex; flex-direction: column; gap: 6px; align-items: center;
+}
+.genre-item:hover { background: #1a1a1a; color: #fff; transform: translateY(-2px); }
+.genre-item.all { background: #1a1a1a; color: #fff; }
+.genre-emoji { font-size: 26px; }
+.genre-name { font-size: 13px; font-weight: 600; }
+
+/* ---------- 插图画廊 ---------- */
+.illus-tip { font-size: 12px; color: #555; margin: -6px 0 14px; }
+.illus-cols { columns: 4 230px; column-gap: 14px; }
+.illus-card {
+  break-inside: avoid; margin-bottom: 14px; position: relative;
+  border: 2px solid #1a1a1a; overflow: hidden; cursor: pointer;
+  background: #fff;
+  transition: transform .15s;
+}
+.illus-card:hover { transform: translateY(-3px); }
+.illus-card.skeleton {
+  height: 180px; background: repeating-linear-gradient(45deg, #e8e5df, #e8e5df 8px, #f4f2ee 8px, #f4f2ee 16px);
+}
+/* 卡片悬浮按钮组 (收藏 + 设为背景) */
+.illus-acts {
+  position: absolute; top: 8px; right: 8px; z-index: 2;
+  display: flex; gap: 6px;
+  opacity: 0; transform: scale(.8);
+  transition: opacity .15s, transform .15s;
+}
+.illus-card:hover .illus-acts { opacity: 1; transform: scale(1); }
+.illus-fav-btn {
+  width: 30px; border: 2px solid #1a1a1a;
+  background: #fff; color: #1a1a1a; font-size: 15px; font-weight: 700;
+  cursor: pointer; line-height: 1; padding: 2px 0 4px;
+  transition: background .12s, color .12s, transform .12s;
+}
+.illus-fav-btn:hover { transform: scale(1.08); }
+.illus-fav-btn.on { background: var(--jp-red); color: #fff; border-color: var(--jp-red); }
+.illus-bg-btn {
+  padding: 4px 10px; border: 2px solid #1a1a1a;
+  background: #fff; color: #1a1a1a; font-size: 12px; font-weight: 600;
+  cursor: pointer;
+  transition: background .12s;
+}
+.illus-bg-btn:hover { background: #1a1a1a; color: #fff; }
+.illus-bg-btn.active { background: var(--jp-red); color: #fff; border-color: var(--jp-red); }
+
+/* 插画收藏 tab (漫画方框风) */
+.illus-tabs { display: flex; gap: 8px; margin: 0 0 16px; }
+.illus-tab {
+  padding: 7px 18px; font-size: 13px; font-weight: 700;
+  background: #fff; color: #1a1a1a;
+  border: 2px solid #1a1a1a; cursor: pointer;
+  transition: background .12s, color .12s;
+}
+.illus-tab:hover { background: var(--bg2); }
+.illus-tab.active { background: #1a1a1a; color: #fff; }
+
+/* 全站背景层 */
+.bg-layer {
+  position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background-size: cover; background-position: center; background-repeat: no-repeat;
+  opacity: 0.35; transition: opacity .6s ease;
+}
+.bg-layer::after {
+  content: ""; position: absolute; inset: 0;
+  background: rgba(244,242,238,.65);
+}
+.has-bg .bg-layer { display: block !important; opacity: 1; }
+.has-bg .bg-layer > .bg-img-wrap { opacity: 0.5; }
+.bg-img-wrap {
+  position: absolute; inset: 0;
+  background-size: cover; background-position: center; background-repeat: no-repeat;
+  filter: grayscale(1) contrast(1.1) brightness(1.05);
+}
+@keyframes skel-shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+.illus-card img { width: 100%; display: block; min-height: 60px; background: #e8e5df; }
+.illus-badge {
+  position: absolute; left: 8px; top: 8px; padding: 2px 9px;
+  font-size: 11px; color: #1a1a1a; font-weight: 600;
+  background: #fff; border: 2px solid #1a1a1a;
+  opacity: 0; transition: opacity .15s;
+}
+.illus-card:hover .illus-badge { opacity: 1; }
+
+/* ---------- 灯箱 ---------- */
+.lightbox {
+  position: fixed; inset: 0; z-index: 300; cursor: zoom-out;
+  background: rgba(26,26,26,.92);
+  display: flex; align-items: center; justify-content: center;
+  animation: lb-in .15s ease;
+}
+@keyframes lb-in { from { opacity: 0; } to { opacity: 1; } }
+.lightbox img {
+  max-width: 92vw; max-height: 88vh;
+  border: 3px solid #fff;
+}
+.lightbox .lb-hint {
+  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+  font-size: 12px; color: rgba(255,255,255,.7);
+}
+
+/* ---------- 播放器缓冲层 ---------- */
+.player-wrap { position: relative; }
+.video-loading {
+  position: absolute; inset: 0; z-index: 5; display: none;
+  flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+  background: rgba(255,255,255,.85); color: #1a1a1a; font-size: 13px;
+  pointer-events: none;
+}
+.video-loading.show { display: flex; }
+.video-loading .tv-load { zoom: .85; }
+
+/* ---------- 下载管理 ---------- */
+.dl-card {
+  background: #fff; padding: 14px 18px;
+  margin-bottom: 12px; border: 2px solid #1a1a1a;
+}
+.dl-head { display: flex; align-items: center; gap: 12px; }
+.dl-name { flex: 1; font-size: 14px; font-weight: 600; }
+.dl-name em { font-style: normal; color: #1a1a1a; margin-left: 6px; font-size: 13px; font-weight: 400; }
+.dl-st { flex-shrink: 0; padding: 3px 12px; font-size: 12px; border: 2px solid #1a1a1a; }
+.st-wait { background: #f4f2ee; color: #1a1a1a; }
+.st-dl { background: #fff; color: #1a1a1a; }
+.st-ok { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
+.st-err { background: #fff; color: #1a1a1a; border-color: #1a1a1a; text-decoration: line-through; }
+.st-cancel { background: #fff; color: #555; }
+.dl-bar {
+  height: 10px; background: #e8e5df;
+  overflow: hidden; margin: 12px 0 8px; border: 1px solid #1a1a1a;
+}
+.dl-bar i {
+  display: block; height: 100%;
+  background: #1a1a1a; transition: width .6s ease;
+}
+.dl-meta { display: flex; gap: 16px; font-size: 12px; color: #555; margin-bottom: 10px; }
+.dl-err { font-size: 12px; color: #1a1a1a; margin: 8px 0; text-decoration: line-through; }
+.dl-file { font-size: 12px; color: #1a1a1a; margin: 8px 0; word-break: break-all; }
+.tool-btn.sm { padding: 5px 14px; font-size: 12px; }
+.dl-files { display: flex; flex-direction: column; gap: 8px; }
+.dl-file-row {
+  display: flex; align-items: center; gap: 14px;
+  background: #fff; padding: 10px 16px;
+  border: 2px solid #1a1a1a;
+}
+.dl-file-row .n { flex: 1; font-size: 13px; word-break: break-all; }
+.dl-file-row .s { font-size: 12px; color: #555; flex-shrink: 0; }
+
+/* ---------- 分类页 ---------- */
+.cat-genres { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 4px; }
+.cat-orders { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.cat-orders .chip { font-size: 12px; padding: 4px 12px; }
+
+/* ---------- 追番时间表 (漫画分镜风) ---------- */
+.wlog-timeline { display: flex; flex-direction: column; gap: 22px; }
+.wlog-group {
+  position: relative;
+  background: #fff;
+  border: 2px solid #1a1a1a;
+  box-shadow: 4px 4px 0 #1a1a1a;   /* 漫画错位硬阴影 */
+  padding-bottom: 4px;
+}
+/* 日期牌: 黑底白字漫画章节标签, 斜切右角 */
+.wlog-date {
+  position: relative;
+  display: inline-flex; align-items: center; gap: 8px;
+  background: #1a1a1a; color: #fff;
+  font-size: 13px; font-weight: 700; letter-spacing: 2px;
+  padding: 6px 18px 6px 14px;
+  margin: -2px 0 8px -2px;         /* 贴住分镜左上角 */
+}
+.wlog-date::after {
+  content: ""; position: absolute; right: -12px; top: 0;
+  border-top: 30px solid #1a1a1a;
+  border-right: 12px solid transparent;
+}
+.wlog-count {
+  font-size: 11px; font-weight: 700; letter-spacing: 0;
+  background: var(--jp-red); color: #fff;
+  padding: 1px 7px;
+}
+.wlog-list { display: flex; flex-direction: column; }
+.wlog-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 14px;
+  cursor: pointer;
+  border-top: 2px dashed #d8d4cc;   /* 分镜虚线分隔 */
+  transition: background .12s;
+}
+.wlog-item:first-child { border-top: none; }
+.wlog-item:hover { background: var(--bg2); }
+.wlog-cover {
+  width: 42px; height: 56px; flex-shrink: 0;
+  border: 2px solid #1a1a1a;
+  overflow: hidden; background: var(--bg2);
+}
+.wlog-cover img { width: 100%; height: 100%; object-fit: cover; }
+.wlog-cover.none { display: flex; align-items: center; justify-content: center; font-size: 18px; }
+.wlog-info { flex: 1; min-width: 0; }
+.wlog-title {
+  font-size: 14px; font-weight: 700; color: #1a1a1a;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.wlog-meta { display: flex; gap: 10px; margin-top: 3px; font-size: 12px; color: #555; flex-wrap: wrap; }
+.wlog-pos { color: #1a1a1a; font-weight: 600; }
+.wlog-bar { height: 3px; background: var(--bg2); margin-top: 6px; }
+.wlog-bar i { display: block; height: 100%; background: var(--jp-red); transition: width .3s; }
+.wlog-ep { color: var(--jp-red); font-weight: 700; }
+.wlog-dur { flex-shrink: 0; color: #1a1a1a; font-weight: 600; }
+.wlog-time { font-size: 11px; color: #999; flex-shrink: 0; }
+.wlog-go {
+  width: 26px; height: 26px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  border: 2px solid #1a1a1a; background: #fff; color: #1a1a1a;
+  font-size: 16px; font-weight: 700; line-height: 1;
+  transition: background .12s, color .12s, border-color .12s;
+}
+.wlog-item:hover .wlog-go { background: var(--jp-red); color: #fff; border-color: var(--jp-red); }
+
+/* ---------- 关于与更新 ---------- */
+.about-box {
+  max-width: 460px; margin: 24px auto; padding: 28px 24px;
+  background: #fff;
+  text-align: center; border: 2px solid #1a1a1a;
+}
+.about-logo { font-size: 26px; font-weight: 800; margin-bottom: 8px; color: #1a1a1a; }
+.about-ver { color: #555; font-size: 14px; margin-bottom: 16px; }
+.about-actions { margin-bottom: 14px; }
+.about-actions .tool-btn { padding: 8px 22px; font-size: 14px; }
+.about-tip { font-size: 12px; color: #555; word-break: break-all; }
+.tool-btn.sm { font-size: 12px; padding: 2px 8px; border-radius: 0; }
+
+/* ---------- 动漫详情页时间表 ---------- */
+.wlog-anime { padding: 16px; }
+.wlog-anime-head { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; margin-bottom: 12px; }
+.wlog-progress { flex: 1; min-width: 200px; }
+.wlog-bar {
+  height: 6px; background: #e8e5df; border: 1px solid #1a1a1a; overflow: hidden;
+}
+.wlog-bar-fill {
+  height: 100%; background: #1a1a1a;
+  transition: width .5s ease;
+}
+.wlog-progress-text { font-size: 12px; color: #555; margin-top: 4px; }
+.wlog-progress-text b { color: #1a1a1a; font-weight: 700; }
+.wlog-last { font-size: 12px; color: #555; white-space: nowrap; }
+.wlog-last.hint { color: #999; font-style: italic; }
+.ep-dots-wrap {
+  display: flex; flex-wrap: wrap; gap: 4px; padding: 10px;
+  background: #fff; border: 2px solid #1a1a1a;
+}
+.ep-dot {
+  width: 22px; height: 22px;
+  border: 2px solid #1a1a1a;
+  background: #fff;
+  cursor: pointer; position: relative;
+  font-size: 0;
+  transition: transform .16s var(--spring), background .12s;
+  flex-shrink: 0;
+}
+.ep-dot:hover { transform: scale(1.15); }
+.ep-dot.seen { background: #1a1a1a; }
+.ep-dot.seen:hover::after, .ep-dot:hover::after {
+  content: attr(title);
+  position: absolute; bottom: calc(100% + 6px); left: 50%;
+  transform: translateX(-50%);
+  background: #1a1a1a; color: #fff;
+  padding: 3px 8px;
+  font-size: 11px; font-weight: 400;
+  white-space: nowrap;
+  pointer-events: none; z-index: 10;
+}
+.ep-dot-more {
+  font-size: 11px; color: #555;
+  display: flex; align-items: center; padding: 0 6px;
+}
+
+/* ---------- 无限滚动加载器 ---------- */
+.infinite-loader {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 10px; padding: 30px 0; color: #555; font-size: 13px;
+}
+.infinite-loader .tv-load { zoom: .8; }
+
+/* ---------- 卡片网格 ---------- */
+.season-badge {
+  position: absolute; left: 0; top: 0;
+  padding: 3px 8px; font-size: 11px; font-weight: 700;
+  background: var(--jp-red); color: #fff;
+  border-right: 2px solid #1a1a1a;
+  border-bottom: 2px solid #1a1a1a;
+  letter-spacing: .5px;
+}
+.season-badge.small { font-size: 10px; padding: 2px 6px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(158px, 1fr)); gap: 20px 14px; }
+.card { cursor: pointer; transition: transform .22s var(--spring); }
+.card:hover { transform: translateY(-4px); }
+.card .cover {
+  position: relative; width: 100%; aspect-ratio: 3/4;
+  overflow: hidden; background: #fff;
+  border: 2px solid #1a1a1a; border-radius: 10px;   /* Kazumi 感圆角封面 */
+  transition: box-shadow .18s ease;
+}
+.card:hover .cover { box-shadow: 4px 4px 0 #1a1a1a; }   /* 浮起时带漫画硬阴影 */
+.card .cover img { width: 100%; height: 100%; object-fit: cover; }
+.card .cover .cover-mask {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  background: rgba(255,255,255,.5);
+  opacity: 0; transition: opacity .15s;
+}
+.card:hover .cover-mask { opacity: 1; }
+.card .cover .play-ico {
+  width: 52px; height: 52px;
+  background: #1a1a1a; color: #fff; font-size: 20px;
+  display: flex; align-items: center; justify-content: center;
+  transform: scale(.6); transition: transform .18s var(--spring);
+}
+.card:hover .play-ico { transform: scale(1); }
+.card .cover .ep-tag {
+  position: absolute; left: 8px; bottom: 8px; padding: 2px 9px;
+  background: #1a1a1a; font-size: 12px; color: #fff;
+}
+.card .title {
+  margin-top: 9px; font-size: 14px; line-height: 1.45; padding: 0 2px;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  transition: color .12s;
+}
+.card:hover .title { color: #1a1a1a; font-weight: 700; }
+
+/* ---------- 详情页 ---------- */
+.detail-hero {
+  display: flex; gap: 26px; padding: 26px;
+  background: #fff;
+  border: 2px solid #1a1a1a;
+  margin-bottom: 26px;
+}
+.detail-hero .poster { width: 216px; flex-shrink: 0; border: 2px solid #1a1a1a; overflow: hidden; }
+.detail-hero .poster img { width: 100%; aspect-ratio: 3/4; object-fit: cover; }
+.detail-hero .meta { flex: 1; min-width: 0; }
+.detail-hero h1 { font-size: 26px; margin-bottom: 13px; letter-spacing: .5px; }
+.tag-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+.tag { padding: 3px 13px; background: #fff; border: 2px solid #1a1a1a; font-size: 12px; color: #555; }
+.tag.hl { background: var(--jp-red); color: #fff; border-color: var(--jp-red); }
+.detail-desc { color: #333; font-size: 14px; line-height: 1.85; max-height: 122px; overflow-y: auto; }
+.fav-btn {
+  margin-top: 17px; padding: 9px 24px; cursor: pointer;
+  background: #fff; color: #1a1a1a; font-size: 14px; border: 2px solid #1a1a1a; transition: all .12s;
+}
+.fav-btn:hover { background: #1a1a1a; color: #fff; }
+.fav-btn.on { background: var(--jp-red); color: #fff; border-color: var(--jp-red); }
+/* 播放页工具栏里的收藏按钮: 与旁边 tool-btn 持平 (详情页用上面的默认大按钮样式) */
+.player-tools .fav-btn { margin-top: 0; padding: 8px 17px; font-size: 13px; }
+/* 我的 · 功能体验实验室 */
+.lab-sec { margin-bottom: 14px; text-align: left; }
+.lab-sec .about-logo { font-size: 16px; }
+.lab-row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 10px; }
+.lab-cell { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 12px; color: #888; }
+.lab-cell canvas, .lab-img { width: 100%; max-width: 320px; border-radius: 8px; border: 1px solid #eee; display: block; }
+.lab-img { max-width: 520px; transition: filter .25s; }
+.lab-btns { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+.tool-btn.sm { padding: 6px 12px; font-size: 12px; }
+/* 超分画布技术来源水印: 常驻右下, 半透明不挡画面 */
+.sr-watermark {
+  position: absolute; right: 10px; bottom: 8px; z-index: 16; pointer-events: none;
+  font-size: 11px; color: rgba(255,255,255,.42); text-shadow: 0 1px 2px rgba(0,0,0,.6);
+  letter-spacing: .3px;
+}
+
+.ep-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(108px, 1fr)); gap: 10px; }
+.ep-item {
+  padding: 10px 8px; text-align: center; background: #fff;
+  font-size: 13px; cursor: pointer; border: 2px solid #1a1a1a; transition: all .1s;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.ep-item:hover { background: #f4f2ee; }
+.ep-item.current { background: var(--jp-red); color: #fff; border-color: var(--jp-red); font-weight: 600; }
+
+.line-chips { display: flex; flex-wrap: wrap; gap: 9px; margin-bottom: 15px; }
+.chip {
+  padding: 7px 19px; background: #fff; font-size: 13px;
+  cursor: pointer; border: 2px solid #1a1a1a; transition: all .1s; color: #1a1a1a;
+}
+.chip:hover { background: #f4f2ee; }
+.chip.active { background: var(--jp-red); color: #fff; border-color: var(--jp-red); }
+/* 源+ 外部片源线路标识 */
+.chip.ext { border-color: var(--jp-red); color: var(--jp-red); font-weight: 700; }
+.chip.ext.active { background: var(--jp-red); color: #fff; }
+/* Bangumi / AniList 评分展示 */
+.bgm-line { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin: 8px 0 4px; min-height: 20px; }
+.bgm-score { font-size: 17px; font-weight: 800; color: var(--jp-red); }
+.bgm-meta, .bgm-src { font-size: 12.5px; color: #666; }
+.bgm-chip { background: var(--jp-red); color: #fff; font-size: 13px; font-weight: 800; padding: 1px 9px; }
+
+/* ---------- 播放器 ---------- */
+.player-wrap { background: #000; border: 2px solid #1a1a1a; border-radius: 12px; box-shadow: 5px 5px 0 #1a1a1a; overflow: hidden; margin-bottom: 18px; }   /* Kazumi 感圆角播放器外壳 */
+#artPlayer { width: 100%; aspect-ratio: 16/9; background: #000; }
+#artPlayer .art-video-player { width: 100%; height: 100%; border-radius: 0; }
+#artPlayer .art-video { background: #000; }
+.player-tools { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; padding: 14px 4px; }
+.tool-btn {
+  padding: 8px 17px; background: #fff; border: 2px solid #1a1a1a;
+  color: #1a1a1a; cursor: pointer; font-size: 13px; transition: all .1s;
+}
+.tool-btn:hover { background: #1a1a1a; color: #fff; }
+.tool-btn.glow { background: var(--jp-red); color: #fff; border-color: var(--jp-red); }
+.tool-btn.glow:hover { background: #b8000f; }
+.player-title { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+
+/* ---------- 空态 / 我的 ---------- */
+.empty { text-align: center; color: #555; padding: 80px 0; }
+.empty .icon { font-size: 52px; margin-bottom: 12px; }
+.mine-list .card-row {
+  display: flex; gap: 14px; padding: 12px; background: #fff;
+  border: 2px solid #1a1a1a;
+  margin-bottom: 10px; cursor: pointer; transition: background .1s;
+}
+.mine-list .card-row:hover { background: #f4f2ee; }
+.mine-list .card-row img { width: 56px; height: 74px; object-fit: cover; border: 2px solid #1a1a1a; }
+.mine-list .card-row .info { flex: 1; min-width: 0; padding-top: 4px; }
+.mine-list .card-row .info .t { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+.mine-list .card-row .info .s { font-size: 12px; color: #555; }
+.mine-list .del { align-self: center; color: #555; cursor: pointer; font-size: 18px; padding: 8px; }
+.mine-list .del:hover { color: #1a1a1a; font-weight: 700; }
+.mine-tabs { display: flex; gap: 10px; margin-bottom: 18px; }
+.mine-tabs .chip { font-size: 14px; padding: 8px 22px; }
+
+/* ---------- toast / loading ---------- */
+.toast {
+  position: fixed; left: 50%; bottom: 60px; transform: translateX(-50%) translateY(20px);
+  background: #1a1a1a; border: 2px solid #1a1a1a;
+  padding: 10px 22px; font-size: 14px; z-index: 999;
+  color: #fff;
+  opacity: 0; pointer-events: none; transition: all .2s;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.loading-mask {
+  position: fixed; inset: 0; z-index: 998; display: none;
+  flex-direction: column; align-items: center; justify-content: center;
+  background: rgba(255,255,255,.85);
+}
+.loading-mask.show { display: flex; }
+.spinner {
+  width: 42px; height: 42px; border-radius: 50%;
+  border: 3px solid #ccc; border-top-color: #1a1a1a;
+  animation: spin .8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-mask p { margin-top: 12px; color: #555; font-size: 14px; }
+
+/* ---------- 页脚 ---------- */
+.footer { text-align: center; color: #999; font-size: 12px; padding: 20px 0 26px; position: relative; z-index: 2; }
+
+/* ---------- 滚动条 ---------- */
+::-webkit-scrollbar { width: 9px; height: 9px; }
+::-webkit-scrollbar-thumb { background: #1a1a1a; }
+::-webkit-scrollbar-track { background: #e8e5df; }
+
+/* ---------- 标题栏 (无边框 App) ---------- */
+.titlebar {
+  display: none;
+  position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
+  height: 32px; background: #fff;
+  align-items: center; justify-content: space-between;
+  border-bottom: 2px solid #1a1a1a;
+}
+body.app-mode .titlebar { display: flex; }
+.titlebar-drag {
+  flex: 1; height: 100%; -webkit-app-region: drag; app-region: drag;
+}
+.titlebar-btns {
+  display: flex; height: 100%; -webkit-app-region: no-drag; app-region: no-drag;
+}
+.tb-btn {
+  width: 46px; height: 100%; border: none; background: transparent;
+  color: #1a1a1a; font-size: 13px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .12s;
+}
+.tb-btn:hover { background: #e8e5df; }
+.tb-close:hover { background: #1a1a1a; color: #fff; }
+body.app-mode .topbar { margin-top: 32px; }
+
+/* ---------- 浮动返回按钮 ---------- */
+.back-fab {
+  position: fixed; right: 22px; bottom: 28px; z-index: 200;
+  padding: 10px 18px;
+  background: #fff; color: #1a1a1a;
+  border: 2px solid #1a1a1a;
+  font-size: 14px; font-weight: 700; letter-spacing: 1px;
+  cursor: pointer;
+  box-shadow: 3px 3px 0 #1a1a1a;
+  opacity: 0; pointer-events: none; transform: translateY(12px);
+  transition: opacity .18s ease, transform .18s ease, background .12s, color .12s;
+}
+.back-fab.show { opacity: 1; pointer-events: auto; transform: translateY(0); }
+.back-fab:hover {
+  background: var(--jp-red); color: #fff; border-color: var(--jp-red);
+  transform: translateY(-2px);
+}
+
+/* ---------- 推荐板块 (关键词推荐 + 年度评分榜) ---------- */
+.reco-search { display: flex; gap: 10px; margin-bottom: 14px; }
+.reco-search input {
+  flex: 1; height: 42px; padding: 0 16px;
+  background: #fff; border: 2px solid #1a1a1a; font-size: 14px; outline: none;
+}
+.reco-search input:focus { background: var(--accent-bg); }
+.reco-search button {
+  height: 42px; padding: 0 26px; cursor: pointer;
+  background: var(--jp-red); color: #fff; border: 2px solid var(--jp-red);
+  font-size: 14px; font-weight: 700; transition: background .12s;
+}
+.reco-search button:hover { background: #c40010; border-color: #c40010; }
+.reco-label { font-size: 12.5px; color: #555; margin: 0 0 8px; }
+.reco-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.reco-chips .chip { padding: 6px 15px; }
+.reco-chips .chip.active { background: var(--jp-red); color: #fff; border-color: var(--jp-red); }
+.reco-chips .chip .x { margin-left: 7px; color: #999; font-weight: 700; }
+.reco-chips .chip .x:hover { color: var(--jp-red); }
+.reco-hit-tip { font-size: 12.5px; color: #555; margin-bottom: 12px; padding-left: 10px; border-left: 3px solid var(--jp-red); }
+.reco-rank {
+  position: absolute; left: 0; top: 0; z-index: 2;
+  min-width: 26px; height: 26px; padding: 0 7px;
+  background: #1a1a1a; color: #fff;
+  font-size: 14px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+}
+.reco-rank.top { background: var(--jp-red); }
+.reco-yearlist { display: flex; flex-direction: column; gap: 10px; }
+.reco-row {
+  display: flex; align-items: center; gap: 14px;
+  background: #fff; border: 2px solid #1a1a1a; padding: 10px 14px;
+  cursor: pointer; transition: transform .18s var(--spring);
+}
+.reco-row:hover { transform: translateY(-2px); }
+.reco-no { width: 30px; text-align: center; font-size: 20px; font-weight: 800; color: #1a1a1a; flex-shrink: 0; }
+.reco-no.top { color: var(--jp-red); }
+.reco-row img { width: 44px; height: 60px; object-fit: cover; border: 1px solid #1a1a1a; flex-shrink: 0; background: #f4f2ee; }
+.reco-rt { flex: 1; min-width: 0; }
+.reco-rt .t { font-size: 15px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.reco-rt .m { font-size: 12px; color: #666; margin-top: 3px; }
+.reco-sc { font-size: 16px; font-weight: 800; color: var(--jp-red); flex-shrink: 0; }
+/* 骨架屏 shimmer */
+.reco-skel {
+  background: linear-gradient(90deg, #eee 25%, #f6f6f6 37%, #eee 63%);
+  background-size: 400% 100%;
+  animation: reco-shimmer 1.2s ease infinite;
+}
+.reco-skel-t { height: 14px; margin-top: 8px; border-radius: 0; }
+@keyframes reco-shimmer { 0% { background-position: 100% 0; } 100% { background-position: -100% 0; } }
+@media (prefers-reduced-motion: reduce) { .reco-skel { animation: none; } }
+
+/* ---------- 漫画风格加载动画: 集中线转盘 + 尖角对话气泡 ---------- */
+.manga-load {
+  grid-column: 1 / -1;   /* 置于 .grid 内时横跨整行, 非 grid 容器自动忽略 */
+  display: flex; align-items: center; justify-content: center;
+  gap: 13px; padding: 42px 0;
+}
+
+.manga-bubble {
+  position: relative; padding: 9px 14px;
+  background: #fff; border: 2px solid #1a1a1a;
+  box-shadow: 3px 3px 0 #1a1a1a;
+  font-size: 13.5px; font-weight: 700; color: #1a1a1a;
+  display: flex; align-items: center; gap: 5px;
+  white-space: nowrap;
+}
+.manga-bubble::before {   /* 尖角外框 (黑) */
+  content: ""; position: absolute; left: -12px; bottom: 5px;
+  border: 6px solid transparent; border-right-color: #1a1a1a;
+}
+.manga-bubble::after {    /* 尖角内芯 (白), 与黑框叠加形成描边 */
+  content: ""; position: absolute; left: -7px; bottom: 7px;
+  border: 4px solid transparent; border-right-color: #fff;
+}
+.manga-bubble i {
+  width: 6px; height: 6px; background: var(--jp-red);
+  animation: manga-dot .9s ease-in-out infinite;
+}
+.manga-bubble i:nth-child(2) { animation-delay: .15s; }
+.manga-bubble i:nth-child(3) { animation-delay: .3s; }
+@keyframes manga-dot { 0%, 100% { transform: translateY(0); } 40% { transform: translateY(-6px); } }
+/* 点击卡片/条目匹配片源时的行内遮罩 */
+.card, .reco-row { position: relative; }
+.manga-busy {
+  position: absolute; inset: 0; z-index: 6;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 7px; background: rgba(255, 255, 255, .9);
+  cursor: progress;
+}
+.manga-busy .manga-load { padding: 0; gap: 8px; }
+.manga-busy .tv-load { zoom: .72; }
+.manga-busy .manga-bubble { font-size: 11.5px; padding: 5px 9px; box-shadow: 2px 2px 0 #1a1a1a; }
+@media (prefers-reduced-motion: reduce) {
+  .manga-bubble i { animation: none; }
+}
+
+/* ---------- B站小电视加载图标 (黑白漫画风: 天线摇摆 + 屏内红点弹跳 + 整机轻晃) ---------- */
+.tv-load {
+  position: relative; width: 62px; height: 56px; flex-shrink: 0;
+  animation: tv-rock 1.7s ease-in-out infinite;
+}
+.tv-ant {
+  position: absolute; top: 0; width: 3px; height: 15px;
+  background: #1a1a1a; border-radius: 2px; transform-origin: bottom center;
+}
+.tv-ant.a1 { left: 14px; animation: ant-wig-l 1.7s ease-in-out infinite; }
+.tv-ant.a2 { right: 14px; animation: ant-wig-r 1.7s ease-in-out infinite; }
+@keyframes ant-wig-l { 0%, 100% { transform: rotate(-30deg); } 50% { transform: rotate(-44deg); } }
+@keyframes ant-wig-r { 0%, 100% { transform: rotate(30deg); } 50% { transform: rotate(44deg); } }
+.tv-body {
+  position: absolute; left: 0; right: 0; top: 11px; bottom: 7px;
+  background: #fff; border: 2.5px solid #1a1a1a; border-radius: 9px;
+  box-shadow: 3px 3px 0 #1a1a1a;
+}
+.tv-screen {
+  position: absolute; left: 6px; top: 6px; bottom: 13px; right: 21px;
+  border: 2px solid #1a1a1a; border-radius: 4px;
+  display: flex; align-items: center; justify-content: center; gap: 4px;
+}
+.tv-screen i { width: 6px; height: 6px; background: var(--jp-red); animation: manga-dot .9s ease-in-out infinite; }
+.tv-screen i:nth-child(2) { animation-delay: .15s; }
+.tv-screen i:nth-child(3) { animation-delay: .3s; }
+.tv-knob { position: absolute; right: 7px; top: 11px; width: 7px; height: 7px; border: 2px solid #1a1a1a; border-radius: 50%; }
+.tv-knob.k2 { top: 26px; }
+.tv-foot { position: absolute; bottom: 0; width: 10px; height: 7px; background: #1a1a1a; border-radius: 2px; }
+.tv-foot.f1 { left: 9px; }
+.tv-foot.f2 { right: 9px; }
+@keyframes tv-rock { 0%, 100% { transform: rotate(-2.5deg); } 50% { transform: rotate(2.5deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .tv-load, .tv-ant, .tv-screen i { animation: none; }
+}
+.back-fab:active { transform: translateY(0); box-shadow: 1px 1px 0 #1a1a1a; }
+
+/* ---------- 游戏 Wiki 板块 (GameKee 聚合) ---------- */
+.wiki-tip { color: #555; font-size: 13px; margin: -6px 0 18px 1px; }
+.wiki-card { padding: 20px 12px 16px; text-align: center; cursor: pointer; transition: transform .2s var(--spring); }
+.wiki-card:hover { transform: translateY(-3px); }
+/* 漫画印章图标: 集中线发散背景 + JUMP 红代表字, 渲染后依次"盖章"入场 */
+.wiki-ico {
+  position: relative; width: 58px; height: 58px; margin: 0 auto 10px;
+  display: flex; align-items: center; justify-content: center;
+  background:
+    repeating-conic-gradient(rgba(26, 26, 26, .09) 0 4deg, transparent 4deg 15deg),
+    #fff;
+  border: 2.5px solid #1a1a1a; border-radius: 12px;
+  box-shadow: 3px 3px 0 #1a1a1a;
+  transition: all .18s var(--spring);
+}
+/* 游戏官方图标: img 优先展示, 加载失败回退印章代表字 (ico-fb) */
+.wiki-ico img { width: 40px; height: 40px; object-fit: contain; display: block; }
+.wiki-ico .wiki-mk { display: none; }
+.wiki-ico.ico-fb img { display: none; }
+.wiki-ico.ico-fb .wiki-mk { display: block; }
+.wiki-mk {
+  font-size: 25px; font-weight: 900; color: var(--jp-red); line-height: 1;
+  font-family: "SimHei", "Microsoft YaHei", sans-serif;
+  text-shadow: 1.5px 1.5px 0 rgba(26, 26, 26, .18);
+}
+.wiki-card:hover .wiki-ico {
+  background:
+    repeating-conic-gradient(rgba(26, 26, 26, .16) 0 4deg, transparent 4deg 15deg),
+    #fff;
+  transform: rotate(-3deg) scale(1.06);
+  box-shadow: 4px 4px 0 #1a1a1a;
+}
+.wiki-card:hover .wiki-mk { color: #fff; text-shadow: none; }
+.wiki-card:hover .wiki-ico.ico-fb .wiki-mk { color: var(--jp-red); text-shadow: 1.5px 1.5px 0 rgba(26,26,26,.18); }
+.wiki-card { animation: wiki-stamp .32s cubic-bezier(.2, 1.4, .4, 1) backwards; }
+@keyframes wiki-stamp {
+  from { opacity: 0; transform: scale(1.55) rotate(-5deg); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wiki-card { animation: none; }
+}
+.wiki-t { font-size: 15px; font-weight: 800; letter-spacing: .5px;
+  display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
+.wiki-d { font-size: 11.5px; color: #555; margin-top: 4px; }
+.wiki-tag {
+  position: absolute; right: 8px; top: 8px; padding: 1px 6px;
+  background: var(--jp-red); color: #fff; font-size: 10px; font-weight: 700;
+}
+.wiki-top { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.wiki-top-t { font-size: 15px; font-weight: 800; flex: 1; min-width: 0; }
+.wiki-iframe-box { position: relative; }
+.wiki-frame-load {
+  position: absolute; inset: 0; z-index: 2;
+  display: flex; align-items: center; justify-content: center;
+  background: #fff;
+}
+/* 上游加载失败面板 (含手动自检修复入口) */
+.wiki-fail { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 30px 20px; text-align: center; }
+.wiki-fail-t { font-size: 17px; font-weight: 800; }
+.wiki-fail-d { font-size: 13px; color: #555; max-width: 460px; line-height: 1.7; }
+.wiki-fail-btns { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.wiki-frame {
+  position: relative; z-index: 1;
+  width: 100%; height: calc(100vh - 215px); min-height: 420px;
+  border: 2px solid #1a1a1a; background: #fff;
+}
+
+/* ---------- 播放源上游自检修复 (播放失败页面) ---------- */
+.src-check { display: flex; flex-direction: column; align-items: center; margin-top: 14px; }
+.src-check-run { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 6px 0; }
+.src-check-res {
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+  padding: 18px 22px; max-width: 560px; text-align: center;
+  background: #fff; border: 2px solid #1a1a1a;
+  box-shadow: 3px 3px 0 #1a1a1a;
+}
+.src-check-t { font-size: 15px; font-weight: 800; line-height: 1.6; }
+.src-check-list { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.src-st {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 4px 10px; font-size: 12.5px; font-weight: 600;
+  background: #fff; border: 2px solid #1a1a1a;
+}
+.src-st i { font-style: normal; font-size: 11px; color: #999; font-weight: 400; }
+.src-st.ok { border-color: #1a1a1a; }
+.src-st.bad { border-color: #bbb; color: #999; background: #f4f2ee; }
+.src-st.bad i { color: #bbb; }
+
+/* ---------- 外部片源渠道列表 ---------- */
+.src-ch-item {
+  padding: 10px 12px; margin-bottom: 8px; border: 2px solid #1a1a1a;
+  border-radius: 10px; background: #fff; text-align: left;
+}
+.src-ch-main { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 14px; }
+.src-ch-st { font-size: 11.5px; font-weight: 600; color: #999; }
+.src-ch-st.on { color: #1a7f37; }
+.src-ch-api { margin-top: 4px; font-size: 11.5px; color: #777; word-break: break-all; }
+.src-ch-ops { display: flex; gap: 14px; margin-top: 6px; font-size: 12.5px; }
+.src-ch-ops a { color: #ff5252; font-weight: 700; }
+
+
+/* ---------- 页面切换过渡 (苹果式方向感知 push) ---------- */
+/* 前进: 新页从右滑入; 返回: 新页从左滑入. 仅 transform+opacity 合成, 大列表也不卡 */
+/* will-change 只在过渡进行期间挂: 常驻会把整个 #app 提升为巨型合成层, 白白吃显存 */
+#app.page-enter-forward, #app.page-enter-back { will-change: transform, opacity; }
+#app.page-enter-forward { animation: page-in-right .36s cubic-bezier(.22, 1, .36, 1) both; }
+#app.page-enter-back { animation: page-in-left .36s cubic-bezier(.22, 1, .36, 1) both; }
+@keyframes page-in-right {
+  from { opacity: 0; transform: translateX(28px) scale(.985); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes page-in-left {
+  from { opacity: 0; transform: translateX(-28px) scale(.985); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #app.page-enter-forward, #app.page-enter-back { animation: none; }
+}
+
+/* ---------- 响应式 ---------- */
+@media (max-width: 720px) {
+  .topbar-inner { gap: 12px; padding: 8px 12px; flex-wrap: wrap; height: auto; }
+  .mainnav { order: 3; width: 100%; justify-content: space-between; }
+  .mainnav a { flex: 1; text-align: center; padding: 6px 0; }
+  .searchbox input { width: 130px; }
+  #app { padding: 16px 12px 40px; }
+  .carousel-slide { height: 240px; }
+  .carousel-info { left: 18px; bottom: 18px; max-width: 80%; }
+  .carousel-info h2 { font-size: 19px; }
+  .carousel-info p { font-size: 12px; }
+  .carousel-arrow { width: 32px; height: 32px; font-size: 18px; }
+  .h-card { width: 118px; }
+  .h-cover { width: 118px; }
+  .grid { grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 14px 10px; }
+  .detail-hero { flex-direction: column; padding: 16px; }
+  .detail-hero .poster { width: 170px; margin: 0 auto; }
+  .detail-hero h1 { font-size: 20px; }
+  .ep-list { grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); }
+}
+
+/* ============ Kazumi 版式对齐 · 统一圆角体系与呼吸感 (漫画风保留: 黑描边 + 硬阴影) ============ */
+
+/* --- 大容器卡片 12px --- */
+.detail-hero, .about-box, .dl-card, .wiki-card, .src-check-res, .wiki-frame { border-radius: 12px; }
+.detail-hero { padding: 28px; box-shadow: 4px 4px 0 #1a1a1a; }
+.wlog-group { border-radius: 12px; overflow: hidden; }
+.ep-dots-wrap { border-radius: 12px; }
+
+/* --- 中容器 10px --- */
+.illus-card, .dl-file-row, .reco-row, .mine-list .card-row, .toast, .lightbox img { border-radius: 10px; }
+
+/* --- 封面缩略图 8px --- */
+.detail-hero .poster, .wlog-cover, .mine-list .card-row img { border-radius: 8px; }
+.reco-row img { border-radius: 6px; }
+
+/* --- 按钮 / 标签: 圆角块 10px (Kazumi 胶囊感) --- */
+.tool-btn, .chip, .qg-chip, .weekday-tab, .ep-item, .illus-tab, .fav-btn,
+.tag, .back-fab, .dl-st, .illus-bg-btn, .src-st, .wiki-tag { border-radius: 10px; }
+.illus-fav-btn { border-radius: 8px; }
+.tool-btn.sm { border-radius: 8px; }
+
+/* --- 角标徽记 6px --- */
+.season-badge, .ep-tag, .h-ep, .wlog-count, .illus-badge, .bgm-chip, .carousel-badge { border-radius: 6px; }
+
+/* --- 进度条圆头 --- */
+.dl-bar, .wlog-bar, .wlog-bar-fill { border-radius: 6px; }
+.dl-bar, .wlog-bar { overflow: hidden; }
+
+/* --- 搜索框拼合圆角 --- */
+.searchbox input { border-radius: 10px 0 0 10px; }
+.searchbox button { border-radius: 0 10px 10px 0; }
+.reco-search input, .reco-search button { border-radius: 10px; }
+
+/* --- 轮播控件 --- */
+.carousel-arrow { border-radius: 50%; }
+.carousel-dot, .carousel-dot.active { border-radius: 3px; }
+
+/* --- 骨架屏圆角 --- */
+.reco-skel, .reco-skel-t, .illus-card.skeleton { border-radius: 10px; }
+
+/* --- 版块呼吸感: 加大间距, 网格更疏朗 --- */
+.section { margin-bottom: 42px; }
+.grid { gap: 22px 16px; }
+.section-head { margin-bottom: 18px; }
+.player-tools { padding: 16px 2px 8px; }
+
+/* --- 移动端: 侧栏收窄 (顺带复位旧顶部导航媒体查询残留) --- */
+@media (max-width: 720px) {
+  .mainnav { order: initial; width: auto; justify-content: initial; }
+  .siderail { width: 56px; padding: 14px 0; gap: 6px; }
+  .siderail a { width: 48px; flex: 0 0 auto; padding: 8px 0 6px; }
+  .siderail a svg { width: 19px; height: 19px; }
+  body { padding-left: 56px; }
+  .topbar { margin-left: -56px; padding-left: 56px; }
+}
+
+/* ============ Kazumi 流畅度层 · 交错入场 / 封面渐显 / 按压回弹 (纯 CSS, 不改任何逻辑) ============ */
+
+/* --- 卡片交错入场: 仅前 12 项参与动画 (大列表开销恒定), 纯 transform/opacity 合成层 --- */
+@keyframes card-in {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+.grid .card:nth-child(-n+12), .h-scroll .h-card:nth-child(-n+12),
+.genre-wrap .genre-item:nth-child(-n+12), .cat-nav-chips .qg-chip:nth-child(-n+12),
+.illus-cols .illus-card:nth-child(-n+12), .reco-list .reco-row:nth-child(-n+12),
+.mine-list .card-row:nth-child(-n+12) {
+  animation: card-in .32s cubic-bezier(.22, .9, .3, 1) both;
+}
+.grid .card:nth-child(1), .h-scroll .h-card:nth-child(1), .genre-wrap .genre-item:nth-child(1),
+.cat-nav-chips .qg-chip:nth-child(1), .illus-cols .illus-card:nth-child(1),
+.reco-list .reco-row:nth-child(1), .mine-list .card-row:nth-child(1) { animation-delay: 0ms; }
+.grid .card:nth-child(2), .h-scroll .h-card:nth-child(2), .genre-wrap .genre-item:nth-child(2),
+.cat-nav-chips .qg-chip:nth-child(2), .illus-cols .illus-card:nth-child(2),
+.reco-list .reco-row:nth-child(2), .mine-list .card-row:nth-child(2) { animation-delay: 30ms; }
+.grid .card:nth-child(3), .h-scroll .h-card:nth-child(3), .genre-wrap .genre-item:nth-child(3),
+.cat-nav-chips .qg-chip:nth-child(3), .illus-cols .illus-card:nth-child(3),
+.reco-list .reco-row:nth-child(3), .mine-list .card-row:nth-child(3) { animation-delay: 60ms; }
+.grid .card:nth-child(4), .h-scroll .h-card:nth-child(4), .genre-wrap .genre-item:nth-child(4),
+.cat-nav-chips .qg-chip:nth-child(4), .illus-cols .illus-card:nth-child(4),
+.reco-list .reco-row:nth-child(4), .mine-list .card-row:nth-child(4) { animation-delay: 90ms; }
+.grid .card:nth-child(5), .h-scroll .h-card:nth-child(5), .genre-wrap .genre-item:nth-child(5),
+.cat-nav-chips .qg-chip:nth-child(5), .illus-cols .illus-card:nth-child(5),
+.reco-list .reco-row:nth-child(5), .mine-list .card-row:nth-child(5) { animation-delay: 120ms; }
+.grid .card:nth-child(6), .h-scroll .h-card:nth-child(6), .genre-wrap .genre-item:nth-child(6),
+.cat-nav-chips .qg-chip:nth-child(6), .illus-cols .illus-card:nth-child(6),
+.reco-list .reco-row:nth-child(6), .mine-list .card-row:nth-child(6) { animation-delay: 150ms; }
+.grid .card:nth-child(7), .h-scroll .h-card:nth-child(7), .genre-wrap .genre-item:nth-child(7),
+.cat-nav-chips .qg-chip:nth-child(7), .illus-cols .illus-card:nth-child(7),
+.reco-list .reco-row:nth-child(7), .mine-list .card-row:nth-child(7) { animation-delay: 180ms; }
+.grid .card:nth-child(8), .h-scroll .h-card:nth-child(8), .genre-wrap .genre-item:nth-child(8),
+.cat-nav-chips .qg-chip:nth-child(8), .illus-cols .illus-card:nth-child(8),
+.reco-list .reco-row:nth-child(8), .mine-list .card-row:nth-child(8) { animation-delay: 210ms; }
+.grid .card:nth-child(n+9), .h-scroll .h-card:nth-child(n+9), .genre-wrap .genre-item:nth-child(n+9),
+.cat-nav-chips .qg-chip:nth-child(n+9), .illus-cols .illus-card:nth-child(n+9),
+.reco-list .reco-row:nth-child(n+9), .mine-list .card-row:nth-child(n+9) { animation-delay: 240ms; }
+
+/* --- 版块标题与区块淡入上浮, 比卡片更早落定, 形成层次 --- */
+@keyframes section-in {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+.section, .detail-hero, .about-box, .dl-card, .wiki-card { animation: section-in .34s ease-out both; }
+
+/* --- 封面图片渐显: 消除 decode 硬切, 图片插入即柔和浮现 (轮播大图自带缩放过渡, 不重复挂) --- */
+@keyframes img-in { from { opacity: 0; } to { opacity: 1; } }
+.card .cover img, .h-cover img, .illus-card img, .detail-hero .poster img,
+.wlog-cover img, .mine-list .card-row img, .reco-row img {
+  animation: img-in .35s ease-out both;
+}
+
+/* --- 按钮/标签按压回弹: 跟手反馈 --- */
+.tool-btn, .chip, .qg-chip, .weekday-tab, .ep-item, .illus-tab, .fav-btn,
+.genre-item, .back-fab, .illus-bg-btn, .illus-fav-btn, .carousel-btn,
+.searchbox button, .mainnav a, .siderail a {
+  transition-property: transform, background, color, box-shadow, border-color, opacity;
+}
+.tool-btn:active, .chip:active, .qg-chip:active, .weekday-tab:active, .ep-item:active,
+.illus-tab:active, .fav-btn:active, .genre-item:active, .illus-bg-btn:active,
+.illus-fav-btn:active, .carousel-btn:active, .searchbox button:active, .siderail a:active {
+  transform: scale(.94);
+}
+
+/* --- 侧栏选中指示器由 pop 改为滑入+回弹, 更接近 Kazumi 的流动感 --- */
+.siderail a.active::before {
+  animation: tab-slide .34s var(--spring);
+}
+@keyframes tab-slide {
+  0% { transform: translateY(10px) scale(.8); opacity: 0; }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+/* --- 横滑列表滚动更顺滑 (惯性 + 贴边吸附) --- */
+.h-scroll, .quick-genres { scroll-behavior: smooth; -webkit-overflow-scrolling: touch; }
+
+/* ---------- 超分管线: 画布层 (ArtPlayer 内, video 之上 / 字幕弹幕控制条之下) ---------- */
+.sr-canvas {
+  position: absolute; z-index: 15; pointer-events: none; display: none;
+  background: #000;
+}
+.art-controls #srToggle {
+  font-size: 13px; font-weight: 700; letter-spacing: .5px;
+  color: rgba(255, 255, 255, .9); cursor: pointer; padding: 0 4px;
+}
+.art-controls #srToggle.on { color: #ff3b3b; text-shadow: 0 0 8px rgba(255, 59, 59, .55); }
+
+/* --- 离屏渲染跳过 (Kazumi 流畅度的关键工程手段): 视口外的卡片/区块不参与布局与绘制,
+       长列表滚动时浏览器只渲染可见部分, 滚动帧率显著提升; contain-intrinsic-size 提供占位尺寸,
+       避免滚动条跳动与瀑布流重排抖动 --- */
+.card, .h-card, .genre-item, .reco-row, .mine-list .card-row, .dl-card, .wlog-group {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 300px;
+}
+.reco-row, .mine-list .card-row { contain-intrinsic-size: auto 76px; }
+.illus-card {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 320px;   /* 瀑布流卡片占位, 图片加载前后列高稳定不重排 */
+}
+.section { content-visibility: auto; contain-intrinsic-size: auto 420px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .grid .card, .h-scroll .h-card, .genre-wrap .genre-item, .cat-nav-chips .qg-chip,
+  .illus-cols .illus-card, .reco-list .reco-row, .mine-list .card-row,
+  .section, .detail-hero, .about-box, .dl-card, .wiki-card,
+  .card .cover img, .h-cover img, .illus-card img, .detail-hero .poster img,
+  .wlog-cover img, .mine-list .card-row img, .reco-row img, .carousel-bg img {
+    animation: none !important;
+  }
+}
+
+
+/* ---------- 播放器弹幕层 (叠加在 ArtPlayer 视频上, 不拦截鼠标) ---------- */
+.dm-stage {
+  position: absolute; left: 0; top: 0; width: 100%;
+  height: calc(100% - 44px);        /* 底部留出控制条空间, 弹幕不压控件 */
+  overflow: hidden; pointer-events: none; z-index: 20;   /* 高于 .art-video(10), 低于 ArtPlayer 控制层 */
+}
+/* 全屏由 ArtPlayer 自身接管: 弹幕层已在播放器容器内, 随之一起放大 */
+.player-wrap:fullscreen { width: 100vw; height: 100vh; margin: 0; border: 0; border-radius: 0; box-shadow: none; }
+.player-wrap:fullscreen .dm-stage { height: calc(100% - 56px); }
+@media (max-width: 760px) { .dm-stage { height: calc(100% - 38px); } }
+/* 弹幕可用性提示: 详情页徽标 + 播放页条数 */
+.dm-tag.dm-ok { background: var(--jp-red); color: #fff; border-color: var(--jp-red); font-weight: 700; }
+.dm-tag.dm-none { color: #888; border-style: dashed; }
+.dm-hint { font-size: 12px; color: #777; align-self: center; white-space: nowrap; }
+.dm-hint.on { color: var(--jp-red); font-weight: 700; }
+
+/* ---------- 广告源标记 (无广告源优先) ---------- */
+.ad-tag {
+  font-style: normal; font-size: 10px; line-height: 1; font-weight: 700;
+  color: #e60012; border: 1px solid rgba(230, 0, 18, .55);
+  border-radius: 4px; padding: 1px 3px; margin-left: 4px;
+  vertical-align: 1px; white-space: nowrap;
+}
+
+
+/* ====================================================================
+   液态玻璃主题 · 简约高级版 (Liquid Glass · Minimal)
+   - 浅色简约底 + 半透明毛玻璃 + 漫画元素(网点/细黑边/偏移硬阴影/速度线/JUMP红)
+   ==================================================================== */
+
+/* --- 背景: 简约米灰 + 极淡网点(漫画感) + 微弱顶部渐变 --- */
+body {
+  background:
+    radial-gradient(circle, rgba(0,0,0,.05) 1px, transparent 1px),
+    linear-gradient(180deg, #f5f3ef 0%, #ece9e3 100%);
+  background-size: 18px 18px, 100% 100%;
+  background-color: #f2f0ec;
+}
+/* 速度线: 深色半透明(漫画元素) */
+.sakura-layer i { background: linear-gradient(to bottom, transparent, rgba(0,0,0,.15)); }
+
+/* --- 玻璃通用基底 ---
+   性能关键: backdrop-filter 只用于"固定/悬浮"元素(顶栏/侧栏/返回钮/Toast/灯箱),
+   滚动内容(卡片/按钮/标签)一律用半透明白底, 视觉接近但滚动零模糊开销 —— 苹果级流畅的核心取舍 */
+@supports ((backdrop-filter: blur(16px)) or (-webkit-backdrop-filter: blur(16px))) {
+  .topbar, .siderail, .back-fab, .toast, .lightbox, .modal {
+    backdrop-filter: blur(16px) saturate(140%);
+    -webkit-backdrop-filter: blur(16px) saturate(140%);
+  }
+}
+
+/* --- 顶栏: 毛玻璃 + 细黑边 + 漫画偏移阴影 --- */
+.topbar {
+  background: rgba(255, 255, 255, .55);
+  border-bottom: 1px solid rgba(0, 0, 0, .08);
+  box-shadow: 0 2px 0 rgba(0, 0, 0, .04), 0 6px 20px rgba(0, 0, 0, .06), inset 0 1px 0 rgba(255, 255, 255, .6);
+}
+.topbar-inner { height: 64px; }
+.logo { color: #1a1a1a; }
+
+/* 吉祥物气泡 */
+.alona-bubble {
+  background: rgba(255, 255, 255, .78);
+  border: 1px solid rgba(0, 0, 0, .12);
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, .08), 0 6px 20px rgba(0, 0, 0, .1);
+  border-radius: 12px;
+}
+.alona-bubble::after { border-top-color: rgba(0, 0, 0, .12); }
+
+/* --- 左侧导航栏: 玻璃 --- */
+.siderail {
+  background: rgba(255, 255, 255, .5);
+  border-right: 1px solid rgba(0, 0, 0, .08);
+  box-shadow: 2px 0 0 rgba(0, 0, 0, .04), 4px 0 20px rgba(0, 0, 0, .05);
+}
+.siderail a { color: #555; }
+.siderail a:hover { color: #1a1a1a; }
+.siderail a:hover::before {
+  background: rgba(0, 0, 0, .05);
+  border: 1px solid rgba(0, 0, 0, .08);
+}
+/* 选中项: JUMP 红玻璃块 + 漫画偏移阴影 */
+.siderail a.active::before {
+  background: var(--jp-red);
+  border: 1px solid rgba(0, 0, 0, .1);
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, .12), 0 4px 14px rgba(230, 0, 18, .25);
+}
+
+/* --- 搜索框 --- */
+.searchbox input {
+  background: rgba(255, 255, 255, .6);
+  border: 1px solid rgba(0, 0, 0, .12);
+  border-right: none;
+  border-radius: 10px 0 0 10px;
+  color: #1a1a1a;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, .04);
+}
+.searchbox input::placeholder { color: #999; }
+.searchbox input:focus {
+  background: rgba(255, 255, 255, .85);
+  border-color: rgba(0, 0, 0, .2);
+  box-shadow: 0 0 0 2px rgba(230, 0, 18, .12), inset 0 1px 2px rgba(0, 0, 0, .04);
+}
+.searchbox button {
+  background: rgba(26, 26, 26, .82);
+  border: 1px solid rgba(0, 0, 0, .12);
+  border-left: none;
+  border-radius: 0 10px 10px 0;
+  color: #fff;
+  transition: background .18s ease;
+}
+.searchbox button:hover { background: var(--jp-red); }
+
+/* --- 标题/文字: 深色 --- */
+.section-head h2 { color: #1a1a1a; }
+.section-head .more { color: #777; }
+.section-head .more:hover { color: var(--jp-red); font-weight: 700; }
+.section-head h2::before { box-shadow: none; }
+
+/* --- 轮播 --- */
+.carousel {
+  background: rgba(255, 255, 255, .5);
+  border: 1px solid rgba(0, 0, 0, .1);
+  border-radius: 16px;
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, .06), 0 10px 30px rgba(0, 0, 0, .08), inset 0 1px 0 rgba(255, 255, 255, .6);
+}
+.carousel-arrow {
+  background: rgba(255, 255, 255, .7);
+  border: 1px solid rgba(0, 0, 0, .1);
+  color: #1a1a1a;
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, .08);
+}
+.carousel-arrow:hover { background: var(--jp-red); color: #fff; }
+.carousel-dot { background: rgba(0, 0, 0, .2); }
+
+/* --- 横向卡片 / 分类 / 插画瀑布流: 玻璃 + 漫画偏移阴影 --- */
+.h-card, .genre-item, .illus-card, .reco-row, .mine-list .card-row {
+  background: rgba(255, 255, 255, .5);
+  border: 1px solid rgba(0, 0, 0, .1);
+  border-radius: 14px;
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, .05), 0 6px 18px rgba(0, 0, 0, .06), inset 0 1px 0 rgba(255, 255, 255, .55);
+  color: #1a1a1a;
+  transition: transform .22s var(--spring), background .2s ease, box-shadow .2s ease;
+}
+.h-card:hover, .genre-item:hover, .illus-card:hover, .reco-row:hover, .mine-list .card-row:hover {
+  background: rgba(255, 255, 255, .72);
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, .08), 0 12px 28px rgba(0, 0, 0, .1), inset 0 1px 0 rgba(255, 255, 255, .65);
+}
+.h-card:hover .h-cover, .illus-card:hover .illus-cover {
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, .1);
+}
+.h-card .h-title, .illus-card .illus-title, .reco-row .t, .mine-list .card-row .info .t { color: #1a1a1a; }
+.h-card .h-sub, .illus-card .illus-sub, .reco-row .s, .mine-list .card-row .info .s { color: #777; }
+.genre-item { color: #1a1a1a; }
+.genre-item.all { background: #1a1a1a; color: #fff; }
+.genre-item.all:hover { background: #1a1a1a; color: #fff; }
+.genre-item:hover { background: rgba(0, 0, 0, .06); color: #1a1a1a; }
+.illus-card img { background: rgba(0, 0, 0, .04); }
+
+/* --- 封面卡片网格 --- */
+.card { color: #1a1a1a; }
+.card .cover {
+  background: rgba(255, 255, 255, .5);
+  border: 1px solid rgba(0, 0, 0, .1);
+  border-radius: 14px;
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, .05), 0 8px 22px rgba(0, 0, 0, .07), inset 0 1px 0 rgba(255, 255, 255, .55);
+  transition: transform .22s var(--spring), box-shadow .22s ease;
+}
+.card:hover .cover {
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, .08), 0 16px 36px rgba(0, 0, 0, .12), inset 0 1px 0 rgba(255, 255, 255, .65);
+  transform: translateY(-4px);
+}
+.card .title { color: #1a1a1a; }
+.card:hover .title { color: #1a1a1a; font-weight: 700; }
+.card .cover .ep-tag {
+  background: var(--jp-red);
+  border: 1px solid rgba(0, 0, 0, .1);
+  color: #fff;
+  box-shadow: 1px 1px 0 rgba(0, 0, 0, .12);
+}
+
+/* --- 详情页 hero / 关于 / 下载卡 / wiki卡 / 历史 --- */
+.detail-hero, .about-box, .dl-card, .wiki-card, .wlog-group, .src-check-res, .wiki-frame {
+  background: rgba(255, 255, 255, .55);
+  border: 1px solid rgba(0, 0, 0, .1);
+  border-radius: 18px;
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, .05), 0 10px 30px rgba(0, 0, 0, .07), inset 0 1px 0 rgba(255, 255, 255, .6);
+  color: #1a1a1a;
+}
+.detail-hero h1 { color: #1a1a1a; }
+.detail-hero .meta, .detail-hero .meta .desc { color: #555; }
+.detail-hero .poster {
+  border: 1px solid rgba(0, 0, 0, .12);
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, .08), 0 8px 20px rgba(0, 0, 0, .1);
+}
+.about-box h3, .dl-card h3, .wiki-card .wiki-name, .wlog-group .wlog-title { color: #1a1a1a; }
+.wlog-group .wlog-meta, .dl-card .dl-sub { color: #777; }
+
+/* --- 按钮 / 标签 / 集数 --- */
+.fav-btn, .tool-btn, .chip, .qg-chip, .weekday-tab, .ep-item, .illus-tab {
+  background: rgba(255, 255, 255, .55);
+  border: 1px solid rgba(0, 0, 0, .12);
+  border-radius: 10px;
+  color: #1a1a1a;
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, .05), inset 0 1px 0 rgba(255, 255, 255, .5);
+  transition: background .18s ease, transform .18s ease, box-shadow .18s ease;
+}
+.fav-btn:hover, .tool-btn:hover, .chip:hover, .qg-chip:hover, .weekday-tab:hover, .ep-item:hover, .illus-tab:hover {
+  background: rgba(255, 255, 255, .8);
+  color: #1a1a1a;
+}
+/* 激活态: JUMP 红 + 漫画偏移阴影 */
+.fav-btn.on, .chip.active, .chip.ext.active, .qg-chip.active,
+.weekday-tab.active, .ep-item.current, .illus-tab.active,
+.tool-btn.glow {
+  background: var(--jp-red);
+  border-color: rgba(0, 0, 0, .1);
+  color: #fff;
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, .1), 0 4px 12px rgba(230, 0, 18, .2);
+}
+.chip.ext { border-color: var(--jp-red); color: var(--jp-red); }
+.chip.ext.active { color: #fff; }
+.tool-btn.glow:hover { background: #b8000f; }
+.fav-btn:hover { background: #1a1a1a; color: #fff; }
+
+/* --- 播放器: 纯黑视频区 + 漫画风外壳 --- */
+.player-wrap {
+  background: #000;
+  border: 1px solid rgba(0, 0, 0, .15);
+  border-radius: 16px;
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, .1), 0 14px 40px rgba(0, 0, 0, .15);
+}
+
+/* --- 悬浮返回 / Toast / Loading --- */
+.back-fab {
+  background: rgba(26, 26, 26, .82);
+  border: 1px solid rgba(0, 0, 0, .1);
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, .12), 0 6px 18px rgba(0, 0, 0, .15);
+}
+.back-fab:hover { background: var(--jp-red); }
+.back-fab:active { box-shadow: 1px 1px 0 rgba(0, 0, 0, .12); }
+.toast {
+  background: rgba(26, 26, 26, .85);
+  border: 1px solid rgba(0, 0, 0, .1);
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, .1), 0 8px 24px rgba(0, 0, 0, .15);
+  color: #fff;
+}
+.loading-mask { background: rgba(242, 240, 236, .6); }
+.loading-mask .spin { border-color: rgba(0, 0, 0, .1); border-top-color: #1a1a1a; }
+.loading-mask p { color: #555; }
+
+/* --- 灯箱 / 模态 / 下拉面板 --- */
+.lightbox, .modal, .drop-panel {
+  background: rgba(255, 255, 255, .7);
+  border: 1px solid rgba(0, 0, 0, .1);
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, .08), 0 16px 48px rgba(0, 0, 0, .12);
+  color: #1a1a1a;
+}
+
+/* --- 滚动条 --- */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: rgba(0, 0, 0, .03); }
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, .18);
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover { background: rgba(0, 0, 0, .3); background-clip: padding-box; }
+
+/* --- 不支持 backdrop-filter 的兜底 --- */
+@supports not ((backdrop-filter: blur(16px)) or (-webkit-backdrop-filter: blur(16px))) {
+  .topbar, .siderail, .searchbox input, .searchbox button,
+  .carousel, .h-card, .genre-item, .illus-card, .card .cover,
+  .detail-hero, .about-box, .dl-card, .wiki-card, .wlog-group,
+  .reco-row, .mine-list .card-row {
+    background: rgba(255, 255, 255, .85);
+  }
+}
+
+/* ---------- 电影沉浸: 遮幅 Letterbox (2.35:1 动画开合) ----------
+   层级 16: 压在 video(10)/超分画布(15) 上, 弹幕(30)/控制条(60) 之下, 不挡交互 */
+.cine-bar {
+  position: absolute; left: 0; right: 0; height: 0;
+  background: #000; z-index: 16; pointer-events: none;
+  transition: height .6s cubic-bezier(.22, 1, .36, 1);
+}
+.cine-bar.top { top: 0; }
+.cine-bar.bottom { bottom: 0; }
+
+/* ---------- 首页新功能轻提示: 一行小字, 融入玻璃风, 可关闭 ---------- */
+.home-hint {
+  display: flex; align-items: center; justify-content: space-between;
+  margin: 6px 2px 2px; padding: 5px 10px;
+  font-size: 12px; color: #8a8a8a; letter-spacing: .02em;
+  background: rgba(255, 255, 255, .35);
+  border: 1px solid rgba(0, 0, 0, .06);
+  border-radius: 8px;
+}
+.home-hint span { opacity: .85; }
+.home-hint i {
+  font-style: normal; cursor: pointer; color: #bbb;
+  padding: 4px 6px 4px 10px; margin: -4px -6px -4px 0;   /* 扩热区不破布局 */
+  font-size: 13px; line-height: 1;
+}
+.home-hint i:hover { color: var(--jp-red, #e60012); }
+
+/* ---------- 全屏铺满: cover 裁切填满屏幕 (video 与超分画布同步, host 裁掉溢出) ---------- */
+.art-video-player.art-fill { overflow: hidden; }
+.art-video-player.art-fill video { object-fit: cover !important; }
+
+/* ============ 启动进入动画 (App 进入 splash) ============ */
+.boot-splash {
+  position: fixed; inset: 0; z-index: 9999;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--bg, #f4f2ee);
+  background-image: radial-gradient(circle, #00000012 1px, transparent 1px);
+  background-size: 5px 5px;
+  overflow: hidden;
+}
+.boot-splash.boot-out { animation: boot-out .6s cubic-bezier(.4, 0, .2, 1) forwards; }
+@keyframes boot-out {
+  0% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.08); }
+}
+/* 漫画速度线 */
+.boot-lines { position: absolute; inset: 0; pointer-events: none; }
+.boot-lines i {
+  position: absolute; top: -30%; width: 2px; height: 160%;
+  background: linear-gradient(to bottom, transparent, rgba(0,0,0,.15) 35%, rgba(0,0,0,.15) 65%, transparent);
+  animation: boot-line 2.6s linear infinite;
+}
+@keyframes boot-line {
+  0% { transform: translateY(-8%); opacity: .15; }
+  50% { opacity: .5; }
+  100% { transform: translateY(8%) translateX(3px); opacity: .15; }
+}
+.boot-inner { position: relative; z-index: 1; text-align: center; }
+.boot-logo { display: flex; align-items: center; justify-content: center; gap: 14px; }
+.boot-mark {
+  width: 62px; height: 62px; display: grid; place-items: center;
+  background: var(--jp-red, #e60012); color: #fff;
+  font-size: 30px; font-weight: 900;
+  border: 2px solid #1a1a1a; box-shadow: 5px 5px 0 #1a1a1a;
+  animation: boot-pop .72s var(--spring, cubic-bezier(.34,1.56,.64,1)) both;
+}
+.boot-title {
+  font-size: 34px; font-weight: 900; letter-spacing: 4px; color: #1a1a1a;
+  animation: boot-rise .6s .1s var(--spring, cubic-bezier(.34,1.56,.64,1)) both;
+}
+.boot-title em { font-style: normal; color: var(--jp-red, #e60012); border-bottom: 3px solid var(--jp-red, #e60012); }
+.boot-jp {
+  margin-top: 10px; font-size: 11px; letter-spacing: 5px; color: #777;
+  animation: boot-rise .6s .18s ease both;
+}
+.boot-bar {
+  width: 220px; height: 6px; margin: 24px auto 0;
+  border: 2px solid #1a1a1a; background: #fff; overflow: hidden;
+}
+.boot-bar i {
+  display: block; width: 0; height: 100%; background: var(--jp-red, #e60012);
+  animation: boot-fill 1.05s cubic-bezier(.2, .8, .2, 1) .12s forwards;
+}
+.boot-tip {
+  margin-top: 12px; font-size: 12px; letter-spacing: 2px; color: #555;
+  animation: boot-rise .6s .25s ease both;
+}
+@keyframes boot-pop {
+  0% { transform: scale(.4) rotate(-10deg); opacity: 0; }
+  60% { transform: scale(1.08) rotate(2deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0); opacity: 1; }
+}
+@keyframes boot-rise {
+  0% { transform: translateY(14px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+@keyframes boot-fill { to { width: 100%; } }
+@media (prefers-reduced-motion: reduce) {
+  .boot-lines i, .boot-mark, .boot-title, .boot-jp, .boot-bar i, .boot-tip { animation-duration: .01ms; animation-delay: 0s; }
+}

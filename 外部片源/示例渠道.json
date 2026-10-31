@@ -1,0 +1,7 @@
+{
+  "name": "示例渠道(未启用)",
+  "type": "maccms",
+  "api": "https://example.com/api.php/provide/vod/",
+  "mirrors": [],
+  "enabled": false
+}

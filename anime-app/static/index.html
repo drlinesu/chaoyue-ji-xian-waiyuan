@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>超越次元 - 追番神器</title>
+<link rel="stylesheet" href="/style.css?v=20261031i">
+<link rel="icon" href="/icon.ico">
+<!-- Wiki 板块提速: 提前完成 gamekee 的 DNS/TCP/TLS 握手, 进入 iframe 浏览时省去建连开销 -->
+<link rel="preconnect" href="https://www.gamekee.com">
+<link rel="dns-prefetch" href="https://www.gamekee.com">
+<script src="/superres.js?v=20261031h"></script>
+</head>
+<body>
+<!-- 启动进入动画 (进入 App 时全屏播放, 首屏就绪后自动淡出) -->
+<div id="bootSplash" class="boot-splash">
+  <div class="boot-lines">
+    <i style="left:8%"></i><i style="left:19%"></i><i style="left:31%"></i><i style="left:42%"></i>
+    <i style="left:55%"></i><i style="left:68%"></i><i style="left:79%"></i><i style="left:90%"></i>
+  </div>
+  <div class="boot-inner">
+    <div class="boot-logo"><span class="boot-mark">超</span><span class="boot-title">超越<em>次元</em></span></div>
+    <div class="boot-jp">DIMENSION ANIME · 外源版</div>
+    <div class="boot-bar"><i></i></div>
+    <div class="boot-tip">正在穿越次元之壁…</div>
+  </div>
+</div>
+<div id="bgLayer" class="bg-layer" style="display:none"></div>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="logo" href="#/">
+      <span class="alona" id="alona" title="初音未来">
+        <span class="alona-bubble" id="alonaBubble"></span>
+        <svg class="alona-svg" viewBox="0 0 64 88" aria-hidden="true">
+          <!-- 初音未来 · Live2D 风精绘: 动漫尖下巴脸型 / 大 Anime 眼(虹膜渐变+双高光) / 黑色发光耳麦 / 分离袖+百褶裙
+               交互钩子不变: .alona-eye 眨眼 / .alona-pupil 眼神跟随 / .alona-happy 眯眯眼 / #alonaHaloWrap 马尾弹跳 -->
+          <defs>
+            <linearGradient id="mgHair" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#4fd8ce"/><stop offset="1" stop-color="#2fb0a7"/>
+            </linearGradient>
+            <radialGradient id="mgIris" cx=".5" cy=".38" r=".75">
+              <stop offset="0" stop-color="#8cf0e6"/><stop offset=".55" stop-color="#39c5bb"/><stop offset="1" stop-color="#1d9c93"/>
+            </radialGradient>
+            <linearGradient id="mgSkirt" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#31434a"/><stop offset="1" stop-color="#1f2d33"/>
+            </linearGradient>
+          </defs>
+          <ellipse id="alonaShadow" cx="32" cy="83" rx="16" ry="3.2" fill="#1a1a1a" opacity=".12"/>
+          <g id="alonaHaloWrap">
+            <!-- 双马尾: 分层流动曲线 + 内侧阴影 + 逆光高光 + 发圈 -->
+            <path d="M13 20 Q2 26 4 40 Q5 51 10 62.5 L13.5 59.5 Q10.5 50 10.5 40 Q10.5 29 16.5 23 Z" fill="url(#mgHair)"/>
+            <path d="M12.5 24 Q7 30 7.8 40 Q8.4 48.5 12 57 L14.2 55 Q11.8 48 11.8 40 Q11.8 31 15 26 Z" fill="#26a69c" opacity=".45"/>
+            <path d="M8.5 32 Q7.5 40 9.5 48" stroke="#9ff5ee" stroke-width="1.1" fill="none" opacity=".7" stroke-linecap="round"/>
+            <path d="M51 20 Q62 26 60 40 Q59 51 54 62.5 L50.5 59.5 Q53.5 50 53.5 40 Q53.5 29 47.5 23 Z" fill="url(#mgHair)"/>
+            <path d="M51.5 24 Q57 30 56.2 40 Q55.6 48.5 52 57 L49.8 55 Q52.2 48 52.2 40 Q52.2 31 49 26 Z" fill="#26a69c" opacity=".45"/>
+            <path d="M55.5 32 Q56.5 40 54.5 48" stroke="#9ff5ee" stroke-width="1.1" fill="none" opacity=".7" stroke-linecap="round"/>
+            <rect x="9" y="18" width="5" height="5" rx="1" transform="rotate(-12 11.5 20.5)" fill="#26a69c"/>
+            <rect x="10" y="19" width="1.6" height="1.6" rx=".4" transform="rotate(-12 10.8 19.8)" fill="#9ff5ee"/>
+            <rect x="50" y="18" width="5" height="5" rx="1" transform="rotate(12 52.5 20.5)" fill="#26a69c"/>
+            <rect x="51" y="19" width="1.6" height="1.6" rx=".4" transform="rotate(12 51.8 19.8)" fill="#9ff5ee"/>
+            <!-- 星尘点缀 -->
+            <path d="M6.5 29.5 L7.3 31.7 L9.5 32.5 L7.3 33.3 L6.5 35.5 L5.7 33.3 L3.5 32.5 L5.7 31.7 Z" fill="#9ff5ee" opacity=".75"/>
+            <path d="M57.5 42.5 L58.3 44.7 L60.5 45.5 L58.3 46.3 L57.5 48.5 L56.7 46.3 L54.5 45.5 L56.7 44.7 Z" fill="#9ff5ee" opacity=".6"/>
+          </g>
+          <g id="alonaHead">
+            <!-- 脸 (动漫脸型: 宽脸颊 + 收窄尖下巴, 非圆形) -->
+            <path d="M17.3 28.5 Q16.8 37.5 20.4 42.8 Q22.3 45.4 25.3 47.3 Q28.5 49.3 32 50.9 Q35.5 49.3 38.7 47.3 Q41.7 45.4 43.6 42.8 Q47.2 37.5 46.7 28.5 Q46.4 22.5 32 22 Q17.6 22.5 17.3 28.5 Z" fill="#ffeeda"/>
+            <!-- 面侧长发缕 (框脸, 发梢尖角垂过下巴) -->
+            <path d="M15.9 28.5 Q12.4 33 13.3 41 Q14 48.5 18 55 L20.3 51.5 Q17.9 45.5 17.4 33.5 Z" fill="url(#mgHair)"/>
+            <path d="M48.1 28.5 Q51.6 33 50.7 41 Q50 48.5 46 55 L43.7 51.5 Q46.1 45.5 46.6 33.5 Z" fill="url(#mgHair)"/>
+            <!-- 齐刘海 (动漫尖发梢: 满发际 + 四束下垂尖角, 浅弧分缝) -->
+            <path d="M15.5 35 Q13 14.5 32 13.5 Q51 14.5 48.5 35 Q45.5 27.5 40.5 33 Q36 28.5 32 33.5 Q28 28.5 23.5 33 Q19 27.5 15.5 35 Z" fill="url(#mgHair)"/>
+            <path d="M19 24.5 Q26 16.5 39 18.5" stroke="#8ff2ea" stroke-width="1.5" fill="none" opacity=".65" stroke-linecap="round"/>
+            <!-- 动漫大眼: 竖长眼型 + 渐变虹膜(描边/下弧反光/双高光, 眼神跟随组) + 粗上睫毛带翼 -->
+            <g class="alona-eye" id="alonaEyeL">
+              <ellipse cx="24.5" cy="37.2" rx="4.2" ry="5.7" fill="#fff"/>
+              <g class="alona-pupil">
+                <circle cx="24.5" cy="37.6" r="3.4" fill="url(#mgIris)"/>
+                <circle cx="24.5" cy="37.6" r="3.4" fill="none" stroke="#17827a" stroke-width=".55"/>
+                <circle cx="24.5" cy="37.6" r="1.55" fill="#1c3d52"/>
+                <ellipse cx="24.5" cy="40.2" rx="2.1" ry="1" fill="#a9f7f0" opacity=".5"/>
+                <circle cx="23.1" cy="35.6" r="1.2" fill="#fff"/>
+                <circle cx="25.8" cy="39.1" r=".55" fill="#fff" opacity=".9"/>
+              </g>
+              <path d="M20.3 34.6 Q24.5 31 28.7 34.6" stroke="#2f2a3a" stroke-width="1.7" fill="none" stroke-linecap="round"/>
+              <path d="M20.5 34.5 L19.2 33.1 M28.5 34.4 L29.8 33.2" stroke="#2f2a3a" stroke-width="1.05" fill="none" stroke-linecap="round"/>
+            </g>
+            <g class="alona-eye" id="alonaEyeR">
+              <ellipse cx="39.5" cy="37.2" rx="4.2" ry="5.7" fill="#fff"/>
+              <g class="alona-pupil">
+                <circle cx="39.5" cy="37.6" r="3.4" fill="url(#mgIris)"/>
+                <circle cx="39.5" cy="37.6" r="3.4" fill="none" stroke="#17827a" stroke-width=".55"/>
+                <circle cx="39.5" cy="37.6" r="1.55" fill="#1c3d52"/>
+                <ellipse cx="39.5" cy="40.2" rx="2.1" ry="1" fill="#a9f7f0" opacity=".5"/>
+                <circle cx="38.1" cy="35.6" r="1.2" fill="#fff"/>
+                <circle cx="40.8" cy="39.1" r=".55" fill="#fff" opacity=".9"/>
+              </g>
+              <path d="M35.3 34.6 Q39.5 31 43.7 34.6" stroke="#2f2a3a" stroke-width="1.7" fill="none" stroke-linecap="round"/>
+              <path d="M35.5 34.5 L34.2 33.2 M43.5 34.4 L44.8 33.2" stroke="#2f2a3a" stroke-width="1.05" fill="none" stroke-linecap="round"/>
+            </g>
+            <!-- 开心眯眯眼 (hover 显示, 带睫毛) -->
+            <g class="alona-happy" fill="none" stroke="#2f2a3a" stroke-width="1.7" stroke-linecap="round">
+              <path d="M21.3 37 Q24.5 33.5 27.7 37"/>
+              <path d="M36.3 37 Q39.5 33.5 42.7 37"/>
+              <path d="M21.6 36.9 L20.6 35.9 M42.4 36.9 L43.4 35.9" stroke-width="1.1"/>
+            </g>
+            <!-- 腮红 (斜线少女风) / 小鼻尖 / 嘴 (Live2D 式小开口笑) -->
+            <ellipse cx="21.6" cy="43.8" rx="2.3" ry="1.25" fill="#ffb3c2" opacity=".7"/>
+            <path d="M20.2 43.1 L21 44.5 M22.3 42.9 L23.1 44.3" stroke="#ff8fa5" stroke-width=".7" opacity=".8"/>
+            <ellipse cx="42.4" cy="43.8" rx="2.3" ry="1.25" fill="#ffb3c2" opacity=".7"/>
+            <path d="M41.2 43.1 L42 44.5 M43.1 42.9 L43.9 44.3" stroke="#ff8fa5" stroke-width=".7" opacity=".8"/>
+            <path d="M31.7 43.6 Q32 44 32.3 43.6" stroke="#e2ab89" stroke-width=".6" fill="none" stroke-linecap="round"/>
+            <path id="alonaMouth" d="M29.9 45.1 Q32 47.7 34.1 45.1 Q32 46.1 29.9 45.1 Z" fill="#d94f72"/>
+            <!-- 耳麦 (Live2D 风: 黑色头带+葱色发光条 / 黑发音单元 / 麦克风) -->
+            <path d="M15.5 23 Q32 6.5 48.5 23" stroke="#2f2b38" stroke-width="3.2" fill="none" stroke-linecap="round"/>
+            <path d="M16.8 21.6 Q32 7.9 47.2 21.6" stroke="#39c5bb" stroke-width=".7" fill="none" opacity=".85" stroke-linecap="round"/>
+            <rect x="11.5" y="26" width="7" height="11" rx="3.4" fill="#24202e" stroke="#17141f" stroke-width=".8"/>
+            <rect x="45.5" y="26" width="7" height="11" rx="3.4" fill="#24202e" stroke="#17141f" stroke-width=".8"/>
+            <rect x="14" y="28.5" width="2" height="6" rx="1" fill="#39c5bb"/>
+            <rect x="48" y="28.5" width="2" height="6" rx="1" fill="#39c5bb"/>
+            <path d="M13 37 Q12.5 44.5 20 46" stroke="#2f2b38" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+            <circle cx="21.5" cy="46.3" r="1.9" fill="#24202e" stroke="#17141f" stroke-width=".6"/>
+            <circle cx="21.5" cy="46.3" r=".7" fill="#39c5bb"/>
+          </g>
+          <!-- 坐姿身体: 白色无袖上衣+葱色领带 / 深色分离袖 / 百褶裙 / 少女坐姿 -->
+          <g id="alonaBody">
+            <path d="M21.5 49 Q19.5 65.5 24 70.5 Q32 74 40 70.5 Q44.5 65.5 42.5 49 Q32 53.5 21.5 49 Z" fill="#ffffff" stroke="#4a4458" stroke-width="1"/>
+            <path d="M27 50 Q32 52.8 37 50" stroke="#39c5bb" stroke-width="1.3" fill="none"/>
+            <path d="M30.6 51.6 L33.4 51.6 L32.9 53.8 L31.1 53.8 Z" fill="#2fb0a7"/>
+            <path d="M31.1 53.8 L29 62 L30.9 68.6 L32 66.2 L33.1 68.6 L35 62 L32.9 53.8 Z" fill="#39c5bb"/>
+            <path d="M23.5 52.5 Q20 55 20.8 59.5 L24.3 58.8 Q23.8 55.5 25.6 53.4 Z" fill="#2b2b3c" stroke="#1f1f2e" stroke-width=".6"/>
+            <path d="M21 58.9 L24.6 58.2" stroke="#39c5bb" stroke-width="1"/>
+            <path d="M40.5 52.5 Q44 55 43.2 59.5 L39.7 58.8 Q40.2 55.5 38.4 53.4 Z" fill="#2b2b3c" stroke="#1f1f2e" stroke-width=".6"/>
+            <path d="M43 58.9 L39.4 58.2" stroke="#39c5bb" stroke-width="1"/>
+            <path d="M18.5 66.5 Q32 61.5 45.5 66.5 Q44.5 72.5 32 73.8 Q19.5 72.5 18.5 66.5 Z" fill="url(#mgSkirt)"/>
+            <path d="M24 66.8 L23.2 71.8 M32 65.6 L32 72.6 M40 66.8 L40.8 71.8" stroke="#17232a" stroke-width=".7" opacity=".8"/>
+            <path d="M20.5 70.4 Q32 74.8 43.5 70.4" stroke="#39c5bb" stroke-width="1.2" fill="none" opacity=".8"/>
+            <ellipse cx="27" cy="74.2" rx="3" ry="1.6" fill="#22222e"/>
+            <ellipse cx="37" cy="74.2" rx="3" ry="1.6" fill="#22222e"/>
+            <rect x="24.4" y="72.4" width="5.2" height="1.2" rx=".6" fill="#39c5bb"/>
+            <rect x="34.4" y="72.4" width="5.2" height="1.2" rx=".6" fill="#39c5bb"/>
+          </g>
+        </svg>
+      </span><span class="logo-text">超越<em>次元</em></span></a>
+    <div class="searchbox">
+      <input id="searchInput" type="text" placeholder="搜索番剧..." autocomplete="off">
+      <button id="searchBtn" title="搜索">🔍</button>
+    </div>
+  </div>
+</header>
+
+<main id="app"></main>
+
+<div id="toast" class="toast"></div>
+<div id="loading" class="loading-mask">
+  <div class="tv-load"><span class="tv-ant a1"></span><span class="tv-ant a2"></span><div class="tv-body"><div class="tv-screen"><i></i><i></i><i></i></div><span class="tv-knob k1"></span><span class="tv-knob k2"></span></div><span class="tv-foot f1"></span><span class="tv-foot f2"></span></div>
+  <div class="manga-bubble" style="margin-top:16px"><i></i><i></i><i></i>正在穿越次元...</div>
+</div>
+
+<footer class="footer">
+  <p>超越次元 · 穿越次元之壁，与你相遇在每周新番 ✦ 资源来源于公开网络</p>
+</footer>
+
+<!-- Kazumi 式左侧纵向导航栏: 图标+文字, 漫画黑边; 保留 mainnav/data-nav 钩子, 路由高亮逻辑不变 -->
+<nav class="siderail mainnav" id="tabbar" aria-label="主导航">
+  <a href="#/" data-nav="home">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.8V21h14V9.8"/><path d="M9.5 21v-6h5v6"/></svg>
+    <span>首页</span>
+  </a>
+  <a href="#/wiki" data-nav="wiki">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.6"/><path d="M3.4 12h17.2"/><path d="M12 3.4c3.1 3.6 3.1 13.6 0 17.2"/><path d="M12 3.4c-3.1 3.6-3.1 13.6 0 17.2"/></svg>
+    <span>Wiki</span>
+  </a>
+  <a href="#/catalog" data-nav="catalog">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="7" height="7"/><rect x="13" y="4" width="7" height="7"/><rect x="4" y="13" width="7" height="7"/><rect x="13" y="13" width="7" height="7"/></svg>
+    <span>分类</span>
+  </a>
+  <a href="#/reco" data-nav="reco">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.2l2.7 5.5 6 .9-4.4 4.2 1.1 6-5.4-2.9-5.4 2.9 1.1-6L3.3 9.6l6-.9z"/></svg>
+    <span>推荐</span>
+  </a>
+  <a href="#/illus" data-nav="illus">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14"/><circle cx="8.6" cy="10" r="1.5"/><path d="M3.5 16.8 8.5 12l4 3.2 3.6-3.4 4.4 4"/></svg>
+    <span>插画</span>
+  </a>
+  <a href="#/downloads" data-nav="downloads">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v10.5"/><path d="M7 10.8 12 15.8l5-5"/><path d="M4.5 20h15"/></svg>
+    <span>下载</span>
+  </a>
+  <a href="#/mine" data-nav="mine">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.8"/><path d="M4.5 20.5c1.6-3.9 4.4-5.8 7.5-5.8s5.9 1.9 7.5 5.8"/></svg>
+    <span>我的</span>
+  </a>
+</nav>
+
+<script src="/app.js?v=20261031q"></script>
+</body>
+</html>

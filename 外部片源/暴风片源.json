@@ -1,0 +1,7 @@
+{
+  "name": "暴风片源",
+  "type": "maccms",
+  "api": "https://bfzyapi.com/api.php/provide/vod/",
+  "mirrors": [],
+  "enabled": false
+}

@@ -1,0 +1,11 @@
+{
+  "name": "AGE动漫",
+  "type": "age",
+  "api": "https://www.agefans.com",
+  "mirrors": [
+    "https://www.agedm.io",
+    "https://agemys.org",
+    "https://www.agefans.cc"
+  ],
+  "enabled": true
+}
