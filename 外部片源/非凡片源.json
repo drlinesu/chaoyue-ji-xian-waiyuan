@@ -5,6 +5,5 @@
   "mirrors": [
     "https://ffzy5.tv/api.php/provide/vod/"
   ],
-  "enabled": true,
-  "lines_only": true
+  "enabled": true
 }

@@ -5,6 +5,5 @@
   "mirrors": [
     "https://www.hongniuzy3.com/api.php/provide/vod/"
   ],
-  "enabled": true,
-  "lines_only": true
+  "enabled": true
 }

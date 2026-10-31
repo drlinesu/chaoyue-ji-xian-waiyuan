@@ -55,7 +55,6 @@ def _entry(pid, j):
         "api": _valid_api(j.get("api")),
         "mirrors": [_valid_api(m) for m in mirrors if _valid_api(m)],
         "enabled": bool(j.get("enabled", True)),
-        "lines_only": bool(j.get("lines_only", False)),   # 仅作备用播放线路, 不参与首页/搜索/分类
         "file": str(channel_dir() / pid),
     }
 
