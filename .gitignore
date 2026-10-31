@@ -1,0 +1,6 @@
+runtime/
+.app-data/
+downloads/
+__pycache__/
+*.pyc
+*.log
