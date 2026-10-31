@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""超越极限 - 桌面入口 (pythonw 无窗口运行)
+"""超越次元 - 桌面入口 (pythonw 无窗口运行)
 启动 HTTP 服务 -> 打开 Edge/Chrome 独立窗口 -> 窗口关闭后自动退出
 """
 import os, sys, subprocess, threading, time

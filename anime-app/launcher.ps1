@@ -1,4 +1,4 @@
-# 超越极限 - 独立窗口启动器
+# 超越次元 - 独立窗口启动器
 # 启动内嵌 Python 后端 -> 用 Edge 应用模式打开独立窗口 -> 窗口关闭后自动退出后端
 $ErrorActionPreference = "SilentlyContinue"
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path

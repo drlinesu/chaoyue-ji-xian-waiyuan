@@ -28,7 +28,7 @@ from .sources.meta import metadata_info, reco_yearly, _anilist_tag_set
 # ----------------------------------------------------------------------------
 # 版本检查 (更新源固定为官方 GitHub 发布页, 不可配置)
 # ----------------------------------------------------------------------------
-APP_VERSION = "2.5.5"
+APP_VERSION = "2.5.6"
 # 唯一公开仓库: 其余仓库均已设为私人, 更新检查只认这个地址
 GITHUB_REPO = "drlinesu/chaoyue-ji-xian-waiyuan"
 GITHUB_BASE = "https://github.com/%s/releases/latest/download" % GITHUB_REPO
