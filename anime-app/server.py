@@ -168,6 +168,42 @@ def _first_screen_prewarm():
         pass
 
 
+def _fetch_cover(url):
+    """抓取单张封面字节, 失败返回 None"""
+    try:
+        req = Request(url, headers={"User-Agent": UA, "Accept": "image/*"})
+        with _opener.open(req, timeout=8) as resp:
+            if resp.getcode() == 200:
+                return resp.read(5 * 1024 * 1024), resp.headers.get("Content-Type", "")
+    except Exception:
+        pass
+    return None, ""
+
+
+def _cover_prewarm():
+    """预加载首页前若干张封面到内存 LRU: 浏览器打开首屏即出图, 零网络延迟"""
+    try:
+        items = age_home() or []
+        urls = []
+        for it in items[:8]:
+            u = (it or {}).get("cover")
+            if u and u not in urls:
+                urls.append(u)
+        if not urls:
+            return
+        with ThreadPoolExecutor(max_workers=4) as pool:
+            futs = {pool.submit(_fetch_cover, u): u for u in urls}
+            for fut in as_completed(futs):
+                try:
+                    data, ctype = fut.result()
+                    if data:
+                        img_cache_put(futs[fut], data, ctype)
+                except Exception:
+                    pass
+    except Exception:
+        pass
+
+
 def _delayed(sec, fn, *args):
     """延后执行: 给首屏留出带宽/CPU, 避免启动瞬间几十个打分请求把首屏拖慢"""
     time.sleep(sec)
@@ -190,6 +226,7 @@ def main():
     if srv is None:
         raise SystemExit("端口 %d 被占用" % PORT)
     srv.daemon_threads = True
+    threading.Thread(target=_delayed, args=(3, _cover_prewarm), daemon=True).start()    # 封面预热: 首页数据就绪后抓前 8 张封面入内存
     threading.Thread(target=_delayed, args=(8, _illus_prewarm), daemon=True).start()   # 插画预热: 让首屏先占带宽
     threading.Thread(target=_delayed, args=(120, age_home, True), daemon=True).start()  # 种子缓存 2 分钟后刷新为最新
     threading.Thread(target=_delayed, args=(15, _reco_prewarm), daemon=True).start()    # 推荐数据预热
