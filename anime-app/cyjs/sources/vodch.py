@@ -286,6 +286,12 @@ def ch_catalog(page=1, genre=0, order="time"):
     if hit:
         return hit
     srcs = _sources()
+    age_ci = next((ci for ci, (_, typ, _a) in enumerate(srcs) if typ == "age"), None)
+    if age_ci is not None:
+        # 分类沿用原版: AGE 的 44 个剧情标签 + 年份/地区/状态 (影视综合源只参与搜索与线路)
+        data = _age_catalog(age_ci, page, name, order)
+        cache_put(key, data, 300)
+        return data
     macc = [(ci, apis) for ci, (_, typ, apis) in enumerate(srcs) if typ != "age"]
     if not macc:
         age_ci = next((ci for ci, (_, typ, _a) in enumerate(srcs) if typ == "age"), None)
