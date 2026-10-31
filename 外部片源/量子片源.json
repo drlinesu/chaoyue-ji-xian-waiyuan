@@ -1,0 +1,8 @@
+{
+  "name": "量子片源",
+  "type": "maccms",
+  "api": "https://cj.lziapi.com/api.php/provide/vod/",
+  "mirrors": [],
+  "enabled": true,
+  "lines_only": true
+}

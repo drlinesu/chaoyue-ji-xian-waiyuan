@@ -56,7 +56,7 @@ def _keep_anime(it, tids):
 def _sources():
     """[(名称, 类型, [主域, *镜像]), ...] —— 顺序与渠道文件排序一致"""
     return [(c["name"], c.get("type") or "maccms", [c["api"]] + list(c["mirrors"]))
-            for c in enabled_channels()]
+            for c in enabled_channels() if not c.get("lines_only")]
 
 
 def _sync_age_bases():

@@ -1,0 +1,10 @@
+{
+  "name": "红牛片源",
+  "type": "maccms",
+  "api": "https://hongniuzy2.com/api.php/provide/vod/",
+  "mirrors": [
+    "https://www.hongniuzy3.com/api.php/provide/vod/"
+  ],
+  "enabled": true,
+  "lines_only": true
+}
