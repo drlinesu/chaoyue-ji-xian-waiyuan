@@ -63,7 +63,7 @@ def age_base(force=False):
 
             def _probe(b):
                 try:
-                    t = http_get_text(b + "/", timeout=8, tries=1)
+                    t = http_get_text(b + "/", timeout=5, tries=1)
                     return b if "/detail/" in t else None   # 能连上但内容异常不拉黑, 交给下一轮
                 except Exception:
                     _dead_bases[b] = time.time()
@@ -177,54 +177,112 @@ def _extract_episodes(block, base):
     return eps
 
 
+_HOME_LOCK = threading.Lock()
+
+
+def _home_fetch():
+    """首页抓取: 已确认域名直接抓; 冷启动时并行抓各候选域名首页, 首个有效页直接复用
+    (省掉「先探测域名再抓首页」的 2~3 秒往返)"""
+    global _age_base
+    known = []
+    for b in (_age_base, cache_get("age:base")):
+        if b and b in AGE_BASES and b not in known:
+            known.append(b)
+    for b in known:
+        try:
+            t = http_get_text(b + "/", timeout=6, tries=1)
+            if "/detail/" in t:
+                _age_base = b
+                cache_put("age:base", b, 6 * 3600)
+                return b, t
+        except Exception:
+            _dead_bases[b] = time.time()
+    cands = [b for b in AGE_BASES if time.time() - _dead_bases.get(b, 0) >= _DEAD_TTL]
+    if not cands:
+        _dead_bases.clear()
+        cands = list(AGE_BASES)
+    pool = ThreadPoolExecutor(max_workers=len(cands))
+    futs = {pool.submit(lambda x: (x, http_get_text(x + "/", timeout=6, tries=1)), b): b for b in cands}
+    winner = None
+    try:
+        for fut in as_completed(futs):
+            try:
+                b, t = fut.result()
+            except Exception:
+                b = futs[fut]
+                _dead_bases[b] = time.time()
+                continue
+            if "/detail/" in t:
+                winner = (b, t)
+                break
+    finally:
+        for f in futs:
+            f.cancel()
+        pool.shutdown(wait=False, cancel_futures=True)
+    if not winner:
+        raise RuntimeError("AGE动漫各域名均不可访问, 请检查网络或稍后再试")
+    _age_base = winner[0]
+    cache_put("age:base", winner[0], 6 * 3600)
+    return winner
+
+
 def age_home(refresh=False):
     key = "age:home"
     if not refresh:
         hit = cache_get(key)
         if hit:
             return hit
-    base, html = _age_fetch("/", timeout=12)
-    items = _parse_video_cards(html, base)
-    if len(items) < 8:
-        # 备选通用解析
-        got = {}
-        for m in re.finditer(r'<a[^>]+href="[^"]*?/detail/(\d+)[^"]*"[^>]*>(.*?)</a>',
-                             html, re.S):
-            pid = m.group(1)
-            chunk = html[max(0, m.start() - 600): m.end() + 300]
-            title = ""
-            tm = re.search(r'title="([^"]{2,80})"', chunk)
-            if tm:
-                title = unescape(tm.group(1))
-            if not title:
-                title = _clean(m.group(2))[:40]
-            if not title or title.startswith("http"):
+    with _HOME_LOCK:     # 单飞: 启动预热与本页请求共用一次抓取
+        if not refresh:
+            hit = cache_get(key)
+            if hit:
+                return hit
+        base, html = _home_fetch()
+        items = _parse_video_cards(html, base)
+        if len(items) < 8:
+            items = _home_fallback(html, base)
+        if not items:
+            raise RuntimeError("首页解析失败")
+        items = items[:80]
+        cache_put(key, items, 1200)
+        return items
+
+
+def _home_fallback(html, base):
+    """备选通用解析 (卡片结构变化时兜底)"""
+    got = {}
+    for m in re.finditer(r'<a[^>]+href="[^"]*?/detail/(\d+)[^"]*"[^>]*>(.*?)</a>',
+                         html, re.S):
+        pid = m.group(1)
+        chunk = html[max(0, m.start() - 600): m.end() + 300]
+        title = ""
+        tm = re.search(r'title="([^"]{2,80})"', chunk)
+        if tm:
+            title = unescape(tm.group(1))
+        if not title:
+            title = _clean(m.group(2))[:40]
+        if not title or title.startswith("http"):
+            continue
+        cover = ""
+        for cm in re.finditer(r'(?:data-original|data-src|src)="([^"]+?\.(?:jpg|jpeg|png|webp)[^"]*)"', chunk):
+            cu = cm.group(1)
+            if "logo" in cu.lower() or "icon" in cu.lower() or len(cu) < 10:
                 continue
-            cover = ""
-            for cm in re.finditer(r'(?:data-original|data-src|src)="([^"]+?\.(?:jpg|jpeg|png|webp)[^"]*)"', chunk):
-                cu = cm.group(1)
-                if "logo" in cu.lower() or "icon" in cu.lower() or len(cu) < 10:
-                    continue
-                cover = unwrap_img(cu, base)
-                break
-            epm = re.search(r'(第\s*\d+\s*[集话]|全集|\[TV[^\]<]{0,20}\]|剧场版|OVA)', chunk)
-            ep_label = epm.group(1).replace(" ", "") if epm else ""
-            it = got.setdefault(pid, {"id": pid, "title": title, "cover": cover,
-                                      "ep": "", "info": ""})
-            if cover and not it["cover"]:
-                it["cover"] = cover
-            if not it["cover"]:
-                it["cover"] = _age_cover(pid)
-            if len(title) > len(it["title"]):
-                it["title"] = title
-            if ep_label:
-                it["ep"] = ep_label
-        items = list(got.values())
-    if not items:
-        raise RuntimeError("首页解析失败")
-    items = items[:80]
-    cache_put(key, items, 180)
-    return items
+            cover = unwrap_img(cu, base)
+            break
+        epm = re.search(r'(第\s*\d+\s*[集话]|全集|\[TV[^\]<]{0,20}\]|剧场版|OVA)', chunk)
+        ep_label = epm.group(1).replace(" ", "") if epm else ""
+        it = got.setdefault(pid, {"id": pid, "title": title, "cover": cover,
+                                  "ep": "", "info": ""})
+        if cover and not it["cover"]:
+            it["cover"] = cover
+        if not it["cover"]:
+            it["cover"] = _age_cover(pid)
+        if len(title) > len(it["title"]):
+            it["title"] = title
+        if ep_label:
+            it["ep"] = ep_label
+    return list(got.values())
 
 
 def age_search(kw):

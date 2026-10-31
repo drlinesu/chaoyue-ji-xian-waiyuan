@@ -10,6 +10,7 @@
 """
 import datetime
 import re
+import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
 from urllib.parse import quote
@@ -94,9 +95,9 @@ def _sync_age_bases():
             _age.AGE_BASES.insert(0, b)
 
 
-def _get(apis, qs):
+def _get(apis, qs, timeout=7):
     for a in apis:
-        j = _ext_api_get(a, qs)
+        j = _ext_api_get(a, qs, timeout=timeout)
         if j and (j.get("list") or j.get("class")):
             return j
     return None
@@ -149,8 +150,8 @@ def _collect(rows, cap):
 
 
 def _detail_pics(apis, items):
-    """列表接口常缺封面: 批量 ac=detail 补齐 vod_pic"""
-    ids = ",".join(str(it.get("vod_id")) for it in items if it.get("vod_id"))
+    """列表接口常缺封面: 批量 ac=detail 补齐 vod_pic (最多 12 条, 避免详情请求过重)"""
+    ids = ",".join(str(it.get("vod_id")) for it in items[:12] if it.get("vod_id"))
     if not ids:
         return {}
     j = _get(apis, "ac=detail&ids=" + ids)
@@ -158,9 +159,28 @@ def _detail_pics(apis, items):
             for x in (j or {}).get("list") or []}
 
 
+def _anime_tids_from_json(j, apis):
+    """列表接口已带回 class 表时直接解析, 省掉一次 ac=list 请求 (冷启动快 0.6~2s)"""
+    cls = (j or {}).get("class")
+    if isinstance(cls, list) and cls:
+        out = set()
+        for c in cls:
+            if not isinstance(c, dict):
+                continue
+            tid, name = c.get("type_id"), _clean(c.get("type_name") or "")
+            if tid and name and _is_anime_name(name) and _is_jp_name(name):
+                try:
+                    out.add(int(tid))
+                except Exception:
+                    pass
+        return out
+    return _anime_tids(apis)
+
+
 def _maccms_items(ci, apis, qs, kw=""):
-    j = _get(apis, qs)
-    tids = _anime_tids(apis)
+    # 用 ac=detail 一次拿全字段 (含封面), 省掉列表后再补封面的第二次请求
+    j = _get(apis, qs.replace("ac=list", "ac=detail", 1))
+    tids = _anime_tids_from_json(j, apis)
     its = []
     for it in (j or {}).get("list") or []:
         if kw and _ext_match_score(kw, str(it.get("vod_name") or "")) < 1:
@@ -222,14 +242,23 @@ def _all_items(qs, kw=""):
     return rows
 
 
+_HOME_LOCK = threading.Lock()
+
+
 def ch_home(refresh=False):
+    """首屏首页: 单飞 (启动预热与本页请求合并), 避免冷启动时重复抓两遍"""
     key = "vodch:home"
     if not refresh:
         hit = cache_get(key)
         if hit:
             return hit
-    items = _collect(_all_items("ac=list&pg=1"), _CAP_HOME)
-    cache_put(key, items, 1200 if items else 60)
+    with _HOME_LOCK:
+        if not refresh:
+            hit = cache_get(key)
+            if hit:
+                return hit
+        items = _collect(_all_items("ac=list&pg=1"), _CAP_HOME)
+        cache_put(key, items, 1200 if items else 60)
     return items
 
 
