@@ -1,9 +1,0 @@
-{
-  "name": "非凡片源",
-  "type": "maccms",
-  "api": "https://api.ffzyapi.com/api.php/provide/vod/",
-  "mirrors": [
-    "https://ffzy5.tv/api.php/provide/vod/"
-  ],
-  "enabled": false
-}

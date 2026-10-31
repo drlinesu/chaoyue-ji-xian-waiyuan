@@ -2587,7 +2587,7 @@ function dmBoot(title, ep, key) {
 }
 
 /* ---------- 版本检查 (只提示, 不提供下载; 唯一官方渠道 = GitHub 发布页) ---------- */
-let APP_VERSION = "2.5.3";
+let APP_VERSION = "2.5.4";
 /* 唯一公开仓库: 其余仓库均已设为私人 */
 const OFFICIAL_URL = "https://github.com/drlinesu/chaoyue-ji-xian-waiyuan";
 /* 版本检查结果渲染: 有新版本时给出官方下载入口 (应用内不做下载/安装) */

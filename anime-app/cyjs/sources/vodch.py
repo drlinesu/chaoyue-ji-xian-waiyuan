@@ -25,6 +25,32 @@ _ID_RE = re.compile(r"^c(\d+):([0-9A-Za-z_\-]+)$")
 _CLS_CACHE = {}          # api -> (时间戳, [(type_id, type_name)])
 _CLS_TTL = 6 * 3600
 _AGE_INFO = "AGE动漫"
+# maccms 资源站多为影视综合站: 只保留分类名属于动漫的条目 (首页/搜索/分类共用)
+_ANIME_KEYS = ("动漫", "動漫", "番剧", "番劇", "动画", "動畫",
+               "国漫", "日漫", "新番", "剧场版", "OVA", "泡面番")
+
+
+def _is_anime_name(name):
+    n = str(name or "")
+    return any(k.lower() in n.lower() for k in _ANIME_KEYS)
+
+
+def _anime_tids(apis):
+    """渠道中属于动漫的分类 id 集合"""
+    return {tid for tid, name in _classes(apis) if _is_anime_name(name)}
+
+
+def _keep_anime(it, tids):
+    """过滤非动漫条目; 类型信息缺失时保留 (避免误杀)"""
+    tn = _clean(it.get("type_name") or "")
+    if tn:
+        return _is_anime_name(tn)
+    try:
+        tid = int(it.get("type_id"))
+    except Exception:
+        return True
+    return (not tids) or tid in tids
+
 
 
 def _sources():
@@ -112,9 +138,12 @@ def _detail_pics(apis, items):
 
 def _maccms_items(ci, apis, qs, kw=""):
     j = _get(apis, qs)
+    tids = _anime_tids(apis)
     its = []
     for it in (j or {}).get("list") or []:
         if kw and _ext_match_score(kw, str(it.get("vod_name") or "")) < 1:
+            continue
+        if not _keep_anime(it, tids):     # 影视综合源: 只要动漫分类
             continue
         its.append(it)
     if its and any(not str(it.get("vod_pic") or "").strip() for it in its):
@@ -247,15 +276,16 @@ def ch_catalog(page=1, genre=0, order="time"):
         cache_put(key, data, 300)
         return data
     rows, has_more, genres = [], False, []
-    genres = [(n, n) for _, n in _classes(macc[0][1])]   # 分类名取第一个 maccms 渠道
+    genres = [(n, n) for _, n in _classes(macc[0][1]) if _is_anime_name(n)]   # 只展示动漫分类
     with ThreadPoolExecutor(max_workers=max(1, len(macc))) as pool:
-        futs, idx = [], []
+        futs, idx, tids = [], [], []
         for ci, apis in macc:
             tid = next((i for i, n in _classes(apis) if n == name), None) if name else None
             q = ("ac=list&t=%d&pg=%d" % (tid, page)) if tid else ("ac=list&pg=%d" % page)
             futs.append(pool.submit(_get, apis, q))
             idx.append(ci)
-        for f, ci in zip(futs, idx):
+            tids.append(_anime_tids(apis))
+        for f, ci, atids in zip(futs, idx, tids):
             j = f.result() or {}
             try:
                 if int(j.get("pagecount") or 1) > page:
@@ -263,6 +293,8 @@ def ch_catalog(page=1, genre=0, order="time"):
             except Exception:
                 pass
             for it in j.get("list") or []:
+                if not _keep_anime(it, atids):    # 影视综合源: 只要动漫分类
+                    continue
                 rows.append(_item(ci, it))
     items = _collect(rows, 60)
     data = {"items": items, "page": page, "has_more": has_more,
