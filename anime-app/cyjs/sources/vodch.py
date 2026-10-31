@@ -178,7 +178,7 @@ def ch_home(refresh=False):
         if hit:
             return hit
     items = _collect(_all_items("ac=list&pg=1"), _CAP_HOME)
-    cache_put(key, items, 300 if items else 60)
+    cache_put(key, items, 1200 if items else 60)
     return items
 
 

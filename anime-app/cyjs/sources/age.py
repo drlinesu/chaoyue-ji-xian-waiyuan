@@ -47,6 +47,11 @@ def age_base(force=False):
     with _base_lock:
         if _age_base and not force:
             return _age_base
+        if not force:
+            hit = cache_get("age:base")     # 上次成功的域名: 省掉 1.8s 并行探测 (失败会自动重探)
+            if hit and hit in AGE_BASES and time.time() - _dead_bases.get(hit, 0) >= _DEAD_TTL:
+                _age_base = hit
+                return hit
         for round_no in (0, 1):
             now = time.time()
             cands = [b for b in AGE_BASES if now - _dead_bases.get(b, 0) >= _DEAD_TTL]
@@ -81,6 +86,7 @@ def age_base(force=False):
                 pool.shutdown(wait=False, cancel_futures=True)
             if winner:
                 _age_base = winner
+                cache_put("age:base", winner, 6 * 3600)
                 return winner
         raise RuntimeError("AGE动漫各域名均不可访问, 请检查网络或稍后再试")
 

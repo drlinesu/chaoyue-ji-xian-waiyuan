@@ -140,6 +140,24 @@ def source_self_check():
     return out
 
 
+def _first_screen_prewarm():
+    """首屏预热: 冷缓存下首页要现场抓 AGE 主页 (约 3~4s)。
+    启动时后台先抓一次, 用户等浏览器打开的那几秒里缓存已就绪。"""
+    try:
+        age_home()
+    except Exception:
+        pass
+
+
+def _delayed(sec, fn, *args):
+    """延后执行: 给首屏留出带宽/CPU, 避免启动瞬间几十个打分请求把首屏拖慢"""
+    time.sleep(sec)
+    try:
+        fn(*args)
+    except Exception:
+        pass
+
+
 def main():
     srv = None
     for _ in range(30):   # 端口被旧实例占用时等待重试 (更新重启场景)
@@ -151,10 +169,11 @@ def main():
     if srv is None:
         raise SystemExit("端口 %d 被占用" % PORT)
     srv.daemon_threads = True
+    threading.Thread(target=_first_screen_prewarm, daemon=True).start()  # 首屏缓存预热 (冷启动首页要抓源 3~4s)
     threading.Thread(target=_illus_prewarm, daemon=True).start()   # 插画缓存预热
-    threading.Thread(target=_reco_prewarm, daemon=True).start()    # 推荐数据预热
-    threading.Thread(target=_reco_auto_refresh, daemon=True).start()  # 年度榜 Bangumi 评分定时自动刷新
-    threading.Thread(target=_bgm_reach_probe, daemon=True).start() # bgm.tv 可达性探测 (评分短路)
+    threading.Thread(target=_delayed, args=(15, _reco_prewarm), daemon=True).start()    # 推荐数据预热
+    threading.Thread(target=_delayed, args=(25, _reco_auto_refresh), daemon=True).start()  # 年度榜 Bangumi 评分定时自动刷新
+    threading.Thread(target=_delayed, args=(10, _bgm_reach_probe), daemon=True).start() # bgm.tv 可达性探测 (评分短路)
     threading.Thread(target=_disk_prune, daemon=True).start()      # 磁盘缓存治理 (清过期/超限)
     threading.Thread(target=_appdata_housekeeping, daemon=True).start()  # Edge 配置文件缓存治理 (贮存上限)
     threading.Thread(target=_seg_init, daemon=True).start()        # segcache 启动治理 (清 .tmp 残留 + 强制容量上限)
