@@ -18,6 +18,8 @@ async function api(path) {
   const r = await fetch("/api" + path);
   const j = await r.json();
   if (!j.ok) throw new Error(j.error || "请求失败");
+  // 首屏数据就绪: 通知启动动画可以收尾 (只关心首页)
+  if (path.indexOf("/anime/home") === 0 && window.__bootDataReady) window.__bootDataReady();
   return j.data;
 }
 function store(key) {
@@ -2585,7 +2587,7 @@ function dmBoot(title, ep, key) {
 }
 
 /* ---------- 版本检查 (只提示, 不提供下载; 唯一官方渠道 = GitHub 发布页) ---------- */
-let APP_VERSION = "2.5.2";
+let APP_VERSION = "2.5.3";
 /* 唯一公开仓库: 其余仓库均已设为私人 */
 const OFFICIAL_URL = "https://github.com/drlinesu/chaoyue-ji-xian-waiyuan";
 /* 版本检查结果渲染: 有新版本时给出官方下载入口 (应用内不做下载/安装) */
@@ -3139,8 +3141,11 @@ function doSearch() {
   const el = document.getElementById("bootSplash");
   if (!el) return;
   const t0 = Date.now();
-  let done = false;
-  const finish = () => {
+  let done = false, resolved = false;
+  // 首页数据就绪信号 (由 api() 在拿到 /anime/home 后触发)
+  const dataP = new Promise(res => { window.__bootResolve = res; });
+  window.__bootDataReady = () => { if (resolved) return; resolved = true; window.__bootResolve && window.__bootResolve(); };
+  const hide = () => {
     if (done) return;
     done = true;
     const hold = Math.max(0, 1200 - (Date.now() - t0));   // 保证动画完整播完
@@ -3148,6 +3153,15 @@ function doSearch() {
       el.classList.add("boot-out");
       setTimeout(() => el.remove(), 650);
     }, hold);
+  };
+  const finish = async () => {
+    if (done) return;
+    const onHome = !location.hash || location.hash === "#/";
+    if (onHome) {
+      // 首屏抓源期间继续播放进入动画, 数据到了才揭开 (最多多等 4.5s)
+      await Promise.race([dataP, new Promise(r => setTimeout(r, 4500))]);
+    }
+    hide();
   };
   if (document.readyState === "complete") finish();
   else window.addEventListener("load", finish);
