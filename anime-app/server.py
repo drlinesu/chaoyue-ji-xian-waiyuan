@@ -140,6 +140,25 @@ def source_self_check():
     return out
 
 
+def _seed_cache_load():
+    """随包种子缓存: 启动瞬间灌入首页/分类/域名的预生成数据
+    首次打开直接命中 (无需等抓源), 之后由后台刷新换成最新内容"""
+    try:
+        p = os.path.join(os.path.dirname(os.path.abspath(__file__)), "runtime", "seed_cache.json")
+        if not os.path.exists(p):
+            return
+        with open(p, "r", encoding="utf-8") as f:
+            seed = json.load(f)
+        for it in seed or []:
+            key, val = it.get("key"), it.get("value")
+            if not key or val is None:
+                continue
+            if cache_get(key) is None:          # 已有更新缓存时不覆盖
+                cache_put(key, val, int(it.get("ttl") or 1800))
+    except Exception:
+        pass
+
+
 def _first_screen_prewarm():
     """首屏预热: 冷缓存下首页要现场抓 AGE 主页 (约 3~4s)。
     启动时后台先抓一次, 用户等浏览器打开的那几秒里缓存已就绪。"""
@@ -159,6 +178,8 @@ def _delayed(sec, fn, *args):
 
 
 def main():
+    _seed_cache_load()          # 先灌种子缓存, 再挂端口/预热
+    threading.Thread(target=_first_screen_prewarm, daemon=True).start()  # 首屏预热与端口绑定并行
     srv = None
     for _ in range(30):   # 端口被旧实例占用时等待重试 (更新重启场景)
         try:
@@ -169,8 +190,8 @@ def main():
     if srv is None:
         raise SystemExit("端口 %d 被占用" % PORT)
     srv.daemon_threads = True
-    threading.Thread(target=_first_screen_prewarm, daemon=True).start()  # 首屏缓存预热 (冷启动首页要抓源 3~4s)
-    threading.Thread(target=_illus_prewarm, daemon=True).start()   # 插画缓存预热
+    threading.Thread(target=_delayed, args=(8, _illus_prewarm), daemon=True).start()   # 插画预热: 让首屏先占带宽
+    threading.Thread(target=_delayed, args=(120, age_home, True), daemon=True).start()  # 种子缓存 2 分钟后刷新为最新
     threading.Thread(target=_delayed, args=(15, _reco_prewarm), daemon=True).start()    # 推荐数据预热
     threading.Thread(target=_delayed, args=(25, _reco_auto_refresh), daemon=True).start()  # 年度榜 Bangumi 评分定时自动刷新
     threading.Thread(target=_delayed, args=(10, _bgm_reach_probe), daemon=True).start() # bgm.tv 可达性探测 (评分短路)
